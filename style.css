@@ -1,0 +1,37 @@
+header {
+    text-align: center;
+    padding: 20px;
+    background-color: #f8f8f8;
+    margin-bottom: 20px;
+}
+
+#image-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px; /* Added a gap for better spacing */
+}
+
+#image-container .column {
+    flex-grow: 1;
+    flex-basis: calc(100% / 4 - 10px); /* Adjust the calculation based on the gap */
+}
+
+#image-container img {
+    width: 100%;
+    height: auto;
+    max-height: 300px; /* Adjust based on your preference */
+    object-fit: cover;
+}
+
+/* Media Queries for Responsive Columns */
+@media (max-width: 800px) {
+    #image-container .column {
+        flex-basis: calc(100% / 2 - 10px); /* 2 columns on smaller screens */
+    }
+}
+
+@media (min-width: 1200px) {
+    #image-container .column {
+        flex-basis: calc(100% / 6 - 10px); /* 6 columns on larger screens */
+    }
+}

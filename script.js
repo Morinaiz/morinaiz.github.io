@@ -1,33 +1,22 @@
 
 
 document.addEventListener("DOMContentLoaded", function() {
-    const imageContainer = document.getElementById("image-container");
+    const gallery = document.getElementById("gallery");
     let columns = [];
     let columnHeights = [];
     let currentColumnsCount;
-    let currentImageIndex = 0; // Track the index of the current image being loaded
-    let preloadedImages = [];  // Initialize empty array for preloaded images
-
-
-    const imageLoadTimeout = 3000; // Adjust timeout as needed
-
-    const imageFolderPath = "images/";
-    const imageNames = [
-        "image1.png", "image2.png", "image3.png", "image4.png",
-        "image5.png", "image6.png", "image7.png", "image8.png",
-        "image9.png", "image10.png", "image11.png", "image12.png"
-    ];
+    let currentFolderIndex = 1;
 
     function setupColumns(numColumns) {
         currentColumnsCount = numColumns;
         columns = [];
         columnHeights = new Array(numColumns).fill(0);
-        imageContainer.innerHTML = '';
+        gallery.innerHTML = '';
         
         for (let i = 0; i < numColumns; i++) {
             let column = document.createElement("div");
             column.className = "column";
-            imageContainer.appendChild(column);
+            gallery.appendChild(column);
             columns.push(column);
         }
     }
@@ -36,109 +25,100 @@ document.addEventListener("DOMContentLoaded", function() {
         if (window.innerWidth < 800) {
             return 2;
         } else if (window.innerWidth < 1200) {
-            return 4;
+            return 3;
         }
-        return 6;
+        return 5;
     }
 
     function findShortestColumn() {
         return columnHeights.indexOf(Math.min(...columnHeights));
     }
 
-    function appendImageToShortestColumn(img) {
+    function appendImageToShortestColumn(img, imagePath) {
         let columnIndex = findShortestColumn();
         console.log(`Appending image: ${img.src} to column ${columnIndex}`);
+
+        img.addEventListener('click', () => {
+            const projectPath = imagePath.replace('cover.png', 'project.html');
+            openOverlay(imagePath.replace('cover.png', 'project.html'));
+        });
+
         columns[columnIndex].appendChild(img);
-        columnHeights[columnIndex] += img.height; // Might not be accurate before image is displayed
+        columnHeights[columnIndex] += img.height;
+    }
+
+    function loadNextFolderImage(folderNumber) {
+        let imagePath = `pages/${folderNumber}/cover.png`;
+        let img = new Image();
+    
+        img.onload = () => {
+            appendImageToShortestColumn(img, imagePath);
+            loadNextFolderImage(folderNumber + 1);
+        };
+    
+        img.onerror = () => {
+            console.log(`No more folders found after: pages/${folderNumber - 1}/`);
+            // Optionally, you can perform some cleanup or state updates here
+        };
+    
+        img.src = imagePath;
     }
     
-    function preloadImages(images, allLoadedCallback) {
-        preloadedImages = new Array(images.length); // Set the array size based on the number of images
-        let loadedCount = 0;
-
-        images.forEach((imageName, index) => {
-            let img = new Image();
-            img.onload = () => {
-                loadedCount++;
-                preloadedImages[index] = img;  // Store successfully loaded image at its respective index
-                if (loadedCount === images.length) {
-                    allLoadedCallback();  // All images have been loaded
-                }
-            };
-            img.onerror = img.onabort = () => {
-                loadedCount++;
-                preloadedImages[index] = null;  // Assign null for failed loads
-                if (loadedCount === images.length) {
-                    allLoadedCallback();  // Proceed even if some images failed
-                }
-            };
-            img.src = imageFolderPath + imageName;
-        });
-    }
-
-    function processPreloadedImages() {
-        preloadedImages.forEach((img) => {
-            if (img) {  // Check if the image is not null (i.e., it loaded successfully)
-                appendImageToShortestColumn(img);
-            }
-        });
-    }
-
-    function loadNextImage() {
-        if (currentImageIndex >= imageNames.length) {
-            console.log("All images processed.");
-            return; // Stop if all images are processed
-        }
-
-        let img = new Image();
-        img.src = imageFolderPath + imageNames[currentImageIndex];
-        img.loading = "lazy";
-        console.log(`Starting load for: ${img.src}`);
-
-        let hasTimedOut = false;
-        const timer = setTimeout(() => {
-            hasTimedOut = true;
-            console.error(`Loading timed out for: ${img.src}`);
-            currentImageIndex++;
-            loadNextImage(); // Skip to next image
-        }, imageLoadTimeout);
-
-        img.onload = img.onerror = (e) => {
-            clearTimeout(timer);
-            if (!hasTimedOut) {
-                if (img.complete && img.naturalHeight !== 0) {
-                    appendImageToShortestColumn(img);
-                } else {
-                    console.error(`Error loading image: ${img.src}`, e);
-                }
-                currentImageIndex++;
-                loadNextImage(); // Load next image
-            }
-        };
-
-            // Bypass timeout if the image is already loaded from cache
-        if (img.complete && img.naturalHeight !== 0) {
-            clearTimeout(timer);
-            appendImageToShortestColumn(img);
-            currentImageIndex++;
-            loadNextImage();
-        }
-    }
-
     function setupAndLoadImages() {
         setupColumns(calculateColumns());
-        preloadImages(imageNames, () => {
-            processPreloadedImages(); // Process images after all have been preloaded
-        });
+        loadNextFolderImage(currentFolderIndex);
     }
 
     setupAndLoadImages();
 
-    // Handle window resize
     window.addEventListener('resize', () => {
         let newColumns = calculateColumns();
         if (newColumns !== currentColumnsCount) {
-            setupAndLoadImages(); // Re-setup and load images
+            setupAndLoadImages();
         }
     });
 });
+
+function openOverlay(projectPath) {
+    const overlay = document.createElement("div");
+    overlay.id = "overlay";
+    overlay.innerHTML = `
+        <div class="overlay-content">
+            <iframe src="${projectPath}" frameborder="0"></iframe>
+            <button class="close-btn" onclick="closeOverlay()"></button>
+        </div>
+    `;
+
+    // Initially hidden
+    overlay.style.opacity = "0";
+    overlay.style.visibility = "hidden";
+
+    // Close overlay if clicked outside of .overlay-content
+    overlay.addEventListener('click', function(e) {
+        if (e.target.id === "overlay") {
+            closeOverlay();
+        }
+    });
+
+    document.body.appendChild(overlay);
+
+    // Delay to enable CSS transition
+    setTimeout(() => {
+        overlay.style.opacity = "1";
+        overlay.style.visibility = "visible";
+    }, 10); // short delay
+}
+
+function closeOverlay() {
+    const overlay = document.getElementById("overlay");
+    if (overlay) {
+        // Start the hiding transition
+        overlay.style.opacity = "0";
+        overlay.style.visibility = "hidden";
+
+        // Wait for the transition to finish before removing
+        setTimeout(() => {
+            overlay.remove();
+        }, 300); // should match the transition duration
+    }
+}

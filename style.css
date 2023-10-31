@@ -1,37 +1,142 @@
+@import url('https://fonts.googleapis.com/css2?family=Oxygen+Mono&display=swap');
+
 header {
     text-align: center;
-    padding: 20px;
-    background-color: #f8f8f8;
-    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #3C4558;
+    color: #F4F8FF;
+    font-family: 'Oxygen Mono', monospace;
 }
 
-#image-container {
+body {
+    background-color: #2E343F;
+    color: #F4F8FF;
+    font-family: 'Oxygen Mono', monospace;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+#about-me {
+    max-width: 60%;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #46526B;
+    color: #F4F8FF;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.upwork-link img {
+    height: 50px;
+    margin-top: 10px;
+    transition: transform 0.3s ease;
+}
+
+.upwork-link img:hover {
+    transform: scale(1.1);
+}
+
+#gallery {
+    width: 80%;
     display: flex;
     flex-wrap: wrap;
-    gap: 10px; /* Added a gap for better spacing */
+    gap: 10px;
+    padding: 20px; /* Added padding */
+    margin: auto; /* Centers the gallery horizontally */
+    justify-content: center; /* Centers flex-items horizontally inside the container */
 }
 
-#image-container .column {
+#gallery .column {
     flex-grow: 1;
-    flex-basis: calc(100% / 4 - 10px); /* Adjust the calculation based on the gap */
+    flex-basis: calc(100% / 3 - 10px); /* Adjust the calculation based on the gap */
 }
 
-#image-container img {
+#gallery img {
     width: 100%;
     height: auto;
-    max-height: 300px; /* Adjust based on your preference */
+    max-height: 300px;
     object-fit: cover;
+    border-radius: 5px; /* Optional: rounded corners */
+    transition: transform 0.3s ease, border-color 0.3s ease; /* Smooth transition for transform and border-color */
 }
 
-/* Media Queries for Responsive Columns */
+#gallery img:hover {
+    transform: scale(1.1);
+    cursor: pointer;
+}
+
+#overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;opacity: 0; /* Start fully transparent */
+    visibility: hidden; /* Start hidden */
+    transition: opacity 0.3s, visibility 0.3s;
+}
+
+.overlay-content {
+    position: relative;
+    padding: 20px;
+    max-width: 800px;
+    width: 100%;
+}
+
+.overlay-content iframe {
+    width: 100%;
+    border-radius: 10px;
+    height: 80vh;  /* Adjust height as needed */
+}
+
+.close-btn {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    width: 40px; /* Reduced width for minimal size */
+    height: 40px; /* Reduced height for minimal size */
+    background-color: #46526B; /* Nord color - dark blue */
+    color: #D8DEE9; /* Nord color - light gray/blue */
+    border: none;
+    font-size: 28px; /* Adjusted size */
+    cursor: pointer;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s, transform 0.3s; /* Smooth transitions for hover */
+}
+
+.close-btn:hover, .close-btn:focus {
+    background-color: #E13939; /* Nord color - lighter blue */
+    transform: scale(1.1); /* Slightly enlarges the button on hover */
+    outline: none; /* Removes the outline on focus for aesthetic purposes */
+}
+
+.close-btn:before {
+    content: '×'; /* Using the multiplication symbol as the 'X' */
+    font-weight: bold; /* Makes the 'X' thicker */
+}
+
+
 @media (max-width: 800px) {
-    #image-container .column {
-        flex-basis: calc(100% / 2 - 10px); /* 2 columns on smaller screens */
+    #gallery .column {
+        flex-basis: calc(100% / 2 - 10px);
+    }
+    #about-me {
+        max-width: 80%;
     }
 }
 
 @media (min-width: 1200px) {
-    #image-container .column {
-        flex-basis: calc(100% / 6 - 10px); /* 6 columns on larger screens */
+    #gallery .column {
+        flex-basis: calc(100% / 5 - 10px);
+    }
+    #about-me {
+        max-width: 40%;
     }
 }

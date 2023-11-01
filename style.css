@@ -17,7 +17,7 @@ body {
     box-sizing: border-box;
 }
 
-#about-me {
+.text-box {
     max-width: 60%;
     margin: 20px auto;
     padding: 20px;
@@ -27,13 +27,16 @@ body {
     text-align: center;
 }
 
-.upwork-link img {
+.icon img,
+.social-icon img,img {
     height: 50px;
     margin-top: 10px;
     transition: transform 0.3s ease;
+    text-decoration: none;
 }
 
-.upwork-link img:hover {
+.icon img:hover,
+.social-icon img:hover {
     transform: scale(1.1);
 }
 
@@ -42,23 +45,21 @@ body {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
-    padding: 20px; /* Added padding */
-    margin: auto; /* Centers the gallery horizontally */
-    justify-content: center; /* Centers flex-items horizontally inside the container */
+    margin: 20px auto;
 }
 
 #gallery .column {
     flex-grow: 1;
-    flex-basis: calc(100% / 3 - 10px); /* Adjust the calculation based on the gap */
+    flex-basis: calc(100% / 3 - 10px);
 }
 
 #gallery img {
     width: 100%;
     height: auto;
-    max-height: 300px;
+    max-height: 400px;
     object-fit: cover;
-    border-radius: 5px; /* Optional: rounded corners */
-    transition: transform 0.3s ease, border-color 0.3s ease; /* Smooth transition for transform and border-color */
+    border-radius: 5px;
+    transition: transform 0.3s ease, border-color 0.3s ease;
 }
 
 #gallery img:hover {
@@ -75,8 +76,9 @@ body {
     background-color: rgba(0, 0, 0, 0.8);
     display: flex;
     justify-content: center;
-    align-items: center;opacity: 0; /* Start fully transparent */
-    visibility: hidden; /* Start hidden */
+    align-items: flex-start;
+    opacity: 0;
+    visibility: hidden;
     transition: opacity 0.3s, visibility 0.3s;
 }
 
@@ -85,43 +87,62 @@ body {
     padding: 20px;
     max-width: 800px;
     width: 100%;
+    height: calc(100% - 40px);
 }
 
 .overlay-content iframe {
     width: 100%;
     border-radius: 10px;
-    height: 80vh;  /* Adjust height as needed */
+    height: 100%;
 }
+
 
 .close-btn {
     position: absolute;
     top: 10px;
     right: 15px;
-    width: 40px; /* Reduced width for minimal size */
-    height: 40px; /* Reduced height for minimal size */
-    background-color: #46526B; /* Nord color - dark blue */
-    color: #D8DEE9; /* Nord color - light gray/blue */
+    width: 40px;
+    height: 40px;
+    background-color: #46526B;
+    color: #F4F8FF;
     border: none;
-    font-size: 28px; /* Adjusted size */
+    font-size: 28px;
     cursor: pointer;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background-color 0.3s, transform 0.3s; /* Smooth transitions for hover */
+    transition: background-color 0.3s, transform 0.3s;
 }
 
 .close-btn:hover, .close-btn:focus {
-    background-color: #E13939; /* Nord color - lighter blue */
-    transform: scale(1.1); /* Slightly enlarges the button on hover */
-    outline: none; /* Removes the outline on focus for aesthetic purposes */
+    background-color: #E13939;
+    transform: scale(1.1);
+    outline: none;
 }
 
 .close-btn:before {
-    content: '×'; /* Using the multiplication symbol as the 'X' */
-    font-weight: bold; /* Makes the 'X' thicker */
+    content: '×';
+    font-weight: bold;
 }
 
+.message {
+    position: fixed;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #F4F8FF;
+    color: #3C4558;
+    padding: 10px;
+    border-radius: 5px;
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 1000;
+    min-width: 100px;
+    text-align: center;
+    box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.15);
+}
 
 @media (max-width: 800px) {
     #gallery .column {

@@ -69,10 +69,9 @@ function copyTextToClipboard(text) {
 }
 let currentMessageDiv = null;
 let hideTimeout = null;
-let removeTimeout = null;  // New timeout to handle removal
+let removeTimeout = null;
 
 function showMessage(message) {
-    // Clear previous timeouts to avoid conflicts
     if (hideTimeout) {
         clearTimeout(hideTimeout);
         hideTimeout = null;
@@ -93,22 +92,19 @@ function showMessage(message) {
 
     currentMessageDiv.textContent = message;
 
-    // Ensure the element is visible and restart the opacity transition
     currentMessageDiv.style.visibility = 'visible';
     currentMessageDiv.style.opacity = '1';
 
-    // Setup to hide the message after some time
     hideTimeout = setTimeout(() => {
         currentMessageDiv.style.opacity = '0';
 
-        // Setup to remove the element after the transition duration
         removeTimeout = setTimeout(() => {
             if (currentMessageDiv) {
                 currentMessageDiv.remove();
                 currentMessageDiv = null;
             }
-        }, 300); // This should match the duration of the opacity transition in CSS
-    }, 2000); // Time visible on screen
+        }, 300);
+    }, 2000);
 }
 
 

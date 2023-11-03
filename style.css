@@ -1,11 +1,51 @@
 @import url('https://fonts.googleapis.com/css2?family=Oxygen+Mono&display=swap');
 
+@font-face {
+    font-family: 'Oxygen';
+    src: url('data/Oxygen-Regular.woff2') format('woff2');
+    src: url('data/Oxygen-Regular.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Oxygen Mono';
+    src: url('data/OxygenMono-Regular.woff2') format('woff2');
+    src: url('data/OxygenMono-Regular.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
 header {
     text-align: center;
-    padding: 15px;
+    padding: 10px;
+    margin: auto;
     background-color: #3C4558;
     color: #F4F8FF;
     font-family: 'Oxygen Mono', monospace;
+}
+
+.icon-box,
+.light-icon-box {
+    margin: 5px; /* Or whatever margin you prefer */
+    display: inline-block;
+    padding: 15px;
+    background-color: #3C4558;
+    color: #F4F8FF;
+    border-radius: 30px;
+    text-align: center;
+    box-sizing: border-box;
+    width: auto;
+    height: auto;
+}
+
+.light-icon-box{
+    background-color: #46526B;
+    color: #F4F8FF;
+}
+
+.icon-box img{
+    margin: 5px; /* Or whatever margin you prefer */
 }
 
 body {
@@ -15,6 +55,8 @@ body {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    justify-content: center;
+    text-align: center;
 }
 
 .text-box {
@@ -26,6 +68,22 @@ body {
     border-radius: 10px;
     text-align: center;
 }
+
+.left-text-box {
+    max-width: 60%;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #46526B;
+    color: #F4F8FF;
+    border-radius: 10px;
+    text-align: left;
+}
+
+.image {
+    margin: 0px auto;
+    width: 80%;
+    height: auto;
+  }
 
 .icon img,
 .social-icon img,img {
@@ -50,7 +108,7 @@ body {
 
 #gallery .column {
     flex-grow: 1;
-    flex-basis: calc(100% / 3 - 10px);
+    flex-basis: calc(100% / 2 - 10px);
 }
 
 #gallery img {
@@ -146,18 +204,26 @@ body {
 
 @media (max-width: 800px) {
     #gallery .column {
-        flex-basis: calc(100% / 2 - 10px);
+        flex-basis: calc(100% / 1 - 10px);
     }
     #about-me {
         max-width: 80%;
+    }
+    .text-box,
+    .left-text-box,
+    .image {
+        max-width: 90%;
     }
 }
 
 @media (min-width: 1200px) {
     #gallery .column {
-        flex-basis: calc(100% / 5 - 10px);
+        flex-basis: calc(100% / 3 - 10px);
     }
-    #about-me {
+    #about-me,
+    .text-box,
+    .left-text-box,
+    .image {
         max-width: 40%;
     }
 }

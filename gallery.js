@@ -21,11 +21,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function calculateColumns() {
         if (window.innerWidth < 800) {
-            return 2;
+            return 1;
         } else if (window.innerWidth < 1200) {
-            return 3;
+            return 2;
         }
-        return 5;
+        return 3;
     }
 
     function findShortestColumn() {

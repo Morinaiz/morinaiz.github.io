@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", function () {
     let columns = [];
     let columnHeights = [];
     let currentColumnsCount;
-    let currentFolderIndex = 1;
+    let currentFolderIndex = 2;
 
     function setupColumns(numColumns) {
         currentColumnsCount = numColumns;
@@ -34,7 +34,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function appendImageToShortestColumn(img, imagePath) {
         let columnIndex = findShortestColumn();
-        console.log(`Appending image: ${img.src} to column ${columnIndex}`);
         const projectPath = imagePath.replace('cover.png', 'project.html');
         img.addEventListener('click', () => {
             openOverlay(projectPath);
@@ -46,12 +45,13 @@ document.addEventListener("DOMContentLoaded", function () {
     function loadNextFolderImage(folderNumber) {
         let imagePath = `pages/${folderNumber}/cover.png`;
         let img = new Image();
+        img.alt = "Cover Project " + folderNumber;
         img.onload = () => {
             appendImageToShortestColumn(img, imagePath);
-            loadNextFolderImage(folderNumber + 1);
+            if (folderNumber > 1) loadNextFolderImage(folderNumber - 1);
         };
         img.onerror = () => {
-            console.log(`No more folders found after: pages/${folderNumber - 1}/`);
+            console.log(`Can't find folder number /${folderNumber - 1}/`);
         };
         img.src = imagePath;
     }
@@ -60,6 +60,7 @@ document.addEventListener("DOMContentLoaded", function () {
         setupColumns(calculateColumns());
         loadNextFolderImage(currentFolderIndex);
     }
+
     setupAndLoadImages();
     window.addEventListener('resize', () => {
         let newColumns = calculateColumns();

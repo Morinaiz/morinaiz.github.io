@@ -6,9 +6,16 @@
     <link rel="icon" href="data/favicon.png" type="image/png">
     <link rel="stylesheet" href="style.css">
     <title>Lorenzo Morini - Portfolio</title>
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", function(event) { 
+            /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|mobi/i;
+            if (mobileRegex.test(navigator.userAgent)) document.getElementById('instructions').textContent = 'Tap any image to learn more!';
+        });
+    </script>
 </head>
 
-<body>
+<body onload="updateInstructionText()">
     <header>
         <h1>Portfolio</h1>
     </header>
@@ -16,6 +23,7 @@
         <p>Hey there! I'm Lorenzo Morini, a videogame developer from Italy, focusing on Unity
             with a solid background in C# programming. Here you can check out my Game Dev
             projects and all the cool stuff I've been working on. Hope you like what you see!</p>
+            <p id=instructions></p>
             <section class="icon-box">
         <a href="https://www.upwork.com/freelancers/~01067b5eb71db874ad" class="icon" target="_blank" rel="noopener noreferrer">
             <img src="data/upwork-icon.svg" alt="Upwork" /></a>
@@ -25,7 +33,7 @@
             <img src="data/x-icon.svg" alt="Twitter (X)" /></a>
         <a href="https://open.codecks.io/bad_dungeon" class="social-icon" target="_blank" rel="noopener noreferrer">
             <img src="data/codecks-icon.svg" alt="Codecks" /></a>
-            <a href="#" onclick="event.preventDefault()" id="shareButton" class="icon" target="_blank" rel="noopener noreferrer">
+        <a href="#" onclick="event.preventDefault()" id="shareButton" class="icon" target="_blank" rel="noopener noreferrer">
                 <img src="data/share-icon.svg" alt="Share" /></a>
         
         </section>

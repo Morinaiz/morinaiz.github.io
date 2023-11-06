@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="../../data/favicon.png" type="image/png">
+    <link rel="stylesheet" href="../../style.css">
+    <title>Weather Effects</title>
+</head>
+<body>
+    <header>
+        <h1>Weather Effects</h1>
+        <h2>Upwork Project</h2>
+        <section class="light-icon-box">
+        <a id="home-button" href="../../index.html" class="icon" target="_blank" rel="noopener noreferrer"><img src="../../data/home-icon.svg" alt="Home" /></a>
+        <a href="../../index.html" class="icon" target="_blank" rel="noopener noreferrer"><img src="../../data/upwork-icon.svg" alt="Upwork" /></a>
+        <a href="#" onclick="event.preventDefault()" id="shareButton" class="icon" target="_blank" rel="noopener noreferrer"><img src="../../data/share-icon.svg" alt="Share" /></a>
+        </section>
+    </header>
+    <div class="left-text-box">
+        <h1>Project Overview</h1>
+        <p>
+            Crafting immersive environments for a 2D cartoon-style game, I have developed three distinct
+            atmospheric effects that simulate dynamic weather patterns and add a touch of realism to gameplay.
+            These effects include a multifaceted rain-thunderstorm scenario, a dense snow-blizzard condition, and a pervasive fog ambiance.
+        </p>
+    </div>
+    <img src="cover.png" alt="Lightning" class="image">
+    <div class="left-text-box">
+        <h2>Dynamic Rain and Thunderstorm</h2>
+        <p>For the rain effect, I created a system where the length of each rain particle varies with its falling speed,
+            achieving a realistic look and feel for different intensities of a downpour.
+            The thunderstorm is brought to life with custom-made procedural lightnings, striking dramatically within the scene.
+            A custom shader and material work in unison with a global volume for color tuning,
+            ensuring the storm's visual tone is in perfect sync with the game's art style.
+            To complete the effect, a full-screen flash mirrors the dazzling effect of a real lightning strike, adding to the overall storm experience.
+        </p>
+    </div>
+    <img src="1.webp" alt="Thunderstorm" class="image">
+    <div class="left-text-box">
+        <h2>Snow Blizzard with Mist</h2>
+        <p>The snow effect mirrors the complexity of its rainy counterpart but is uniquely tailored to represent a blizzard.
+            It eschews lightning and instead incorporates a custom mist effect that resembles fog, creating the illusion of
+            a snowy whiteout. The blending of snow particles and foggy mist conveys the blustery conditions of a blizzard,
+            all while maintaining the game's cartoon aesthetics.
+
+        </p>
+    </div>
+    <img src="2.webp" alt="Blizzard" class="image">
+    <div class="left-text-box">
+        <h2>Fog</h2>
+        <p>A tightly optimized full-screen shader achieves the fog effect, overlaying the game with a soft, floating mist.
+            The fog's density and movement are carefully controlled to mimic the
+            ebb and flow of real fog, adding a layer of depth to the game's atmosphere.
+
+        </p>
+    </div>
+    <img src="3.webp" alt="Fog" class="image">
+    <div class="left-text-box">
+        <h2>Technical Achievements</h2>
+        <ul>
+            <li>Custom Weather Manager with smooth transition between effects.</li>
+            <li>Adaptive particle system for rain and snow.</li>
+            <li>Custom shaders and materials for tailored visual effects.</li>
+            <li>Global volume color control for atmospheric consistency.</li>
+            <li>Particle-based procedural lightning for thunderstorms.</li>
+            <li>Full-screen flash effect for lightning strikes.</li>
+            <li>Mist effect within the snow for a realistic blizzard look.</li>
+            <li>Scalable fog shader for variable environment mood settings.</li>
+        </ul>
+    </div>
+    </div>
+    <script src="../../parameters-behaviour.js"></script>
+</body>
+
+</html>

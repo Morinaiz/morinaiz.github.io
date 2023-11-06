@@ -95,9 +95,9 @@ body {
 }
 
 .image {
-    margin: 0px auto;
+    margin: 6px auto;
     max-width: 60%;
-  }
+}
 
 #gallery {
     width: 80%;
@@ -209,7 +209,8 @@ body {
     }
     .text-box,
     .left-text-box,
-    .image {
+    .image,
+    .gallery-small {
         max-width: 90%;
     }
 }
@@ -220,7 +221,8 @@ body {
     }
     .text-box,
     .left-text-box,
-    .image {
+    .image,
+    .gallery-small {
         max-width: 40%;
     }
 }

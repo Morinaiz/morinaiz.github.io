@@ -203,6 +203,22 @@ body {
     box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.15);
 }
 
+.button {
+    text-decoration-line: none;
+    background-color: #F4F8FF;
+    color: #3C4558;
+    padding: 10px;
+    border-radius: 5px;
+    text-align: center;
+    box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.15);
+    transition-duration: 0.3s;
+}
+
+.button:hover{
+    transition-duration: 0.3s;
+    background-color: #71C4E8;
+}
+
 @media (max-width: 800px) {
     #gallery .column {
         flex-basis: calc(100% / 1 - 10px);

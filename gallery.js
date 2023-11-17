@@ -1,5 +1,4 @@
 document.addEventListener("DOMContentLoaded", function () {
-
     const gallery = document.getElementById("gallery");
     let columns = [];
     let columnHeights = [];
@@ -77,11 +76,13 @@ function openOverlay(projectPath) {
     if (overlayOpen) {
         return;
     }
+
     let modifiedProjectPath = projectPath + "?overlay";
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has('upwork')) {
         modifiedProjectPath += "&upwork";
     }
+
     const overlay = document.createElement("div");
     overlay.id = "overlay";
     overlay.innerHTML = `
@@ -90,6 +91,7 @@ function openOverlay(projectPath) {
             <button class="close-btn" onclick="closeOverlay()"></button>
         </div>
     `;
+
     document.body.appendChild(overlay);
     overlay.style.opacity = "0";
     overlay.style.visibility = "hidden";
@@ -99,10 +101,12 @@ function openOverlay(projectPath) {
             closeOverlay();
         }
     });
+
     setTimeout(() => {
         overlay.style.opacity = "1";
         overlay.style.visibility = "visible";
     }, 10);
+
     overlayOpen = true;
     currentProjectPath = projectPath;
 }
@@ -111,6 +115,7 @@ function closeOverlay() {
     if (!overlayOpen) {
         return;
     }
+    
     const overlay = document.getElementById("overlay");
     if (overlay) {
         overlay.style.opacity = "0";

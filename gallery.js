@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", function () {
     let columns = [];
     let columnHeights = [];
     let currentColumnsCount;
-    let currentFolderIndex = 3;
+    let currentFolderIndex = 4;
 
     function setupColumns(numColumns) {
         currentColumnsCount = numColumns;

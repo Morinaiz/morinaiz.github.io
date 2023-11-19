@@ -1,0 +1,24 @@
+#map { 
+    width:100%;
+    height: 100%;
+    padding: 0px;
+}
+
+#map-box { 
+    width:100%;
+    height: 80vh;
+    padding: 20px;
+    display:block;
+    box-sizing: border-box;
+    width: 60%;
+    margin: 20px;
+    background-color: #46526B;
+    color: #F4F8FF;
+    border-radius: 10px;
+}
+
+@media (max-width: 800px) {
+    #map-box {
+        width: 90%;
+    }
+}

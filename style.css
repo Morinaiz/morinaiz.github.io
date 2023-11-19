@@ -26,6 +26,7 @@ header {
     padding-bottom: 10px;
     padding-right: 0px;
     background-color: #3C4558;
+    margin-bottom: 15px;
     color: #F4F8FF;
     font-family: 'Oxygen Mono', monospace;
 }
@@ -43,7 +44,6 @@ body {
     font-family: 'Oxygen Mono', monospace;
     margin: 0;
     padding: 0;
-    box-sizing: border-box;
     text-align: center;
 }
 
@@ -81,10 +81,12 @@ body {
 .text-box,
 .left-text-box,
 .big-text-box {
-    max-width: 60%;
+    display:block;
+    box-sizing: border-box;
+    width: 60%;
     margin: 20px;
-    padding-top: 15px;
-    padding-bottom: 15px;
+    padding-top: 10px;
+    padding-bottom: 10px;
     padding-inline: 30px;
     background-color: #46526B;
     color: #F4F8FF;
@@ -96,8 +98,7 @@ body {
 }
 
 .big-text-box{
-    min-width: 90%;
-    max-width: 90%;
+    width: 80%;
 }
 
 .image {
@@ -233,7 +234,7 @@ body {
     .left-text-box,
     .image,
     .gallery-small {
-        max-width: 90%;
+        width: 90%;
     }
 }
 
@@ -245,6 +246,6 @@ body {
     .left-text-box,
     .image,
     .gallery-small {
-        max-width: 40%;
+        width: 40%;
     }
 }

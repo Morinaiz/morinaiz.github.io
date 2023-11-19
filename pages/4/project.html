@@ -6,12 +6,10 @@
     <meta name="description" content="Lorenzo Morini, Italian video game developer - Pisa Population Density Map as personal project">
     <link rel="icon" href="../../data/favicon.png" type="image/png">
     <link rel="stylesheet" href="../../style.css">
+    <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.css" />
     <style>
-        #map {
-            width: auto;
-            height: 800px; /* Arbitrary height, adjust as needed */
-        }
+        
     </style>
     <title>Pisa Population Density Map</title>
     
@@ -29,13 +27,15 @@
     <div class="left-text-box">
         <h1>Project Overview</h1>
         <p>
-            Lorem Ipsum
+            In this personal project of mine, I created a heatmap to visually represent the population density of Pisa, my home city.
+            This project was driven by my interest in understanding the demographic patterns of my city.
+            To achieve this, I utilized high-resolution population density maps provided by Facebook's Data for Good initiative,
+            which I then extracted, processed, and displayed using Leaflet.
         </p>
     </div>
 
     </div>
-    <div class="big-text-box">
-        <h2>Technical Achievements</h2>
+    <div id="map-box">
         <div id="map"></div>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/heatmap.js@2.0.5/build/heatmap.min.js"></script>
@@ -43,7 +43,28 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
         <script src="map-creator.js">
         </script>
+    </div>    
+    <div class="left-text-box">
+        <h2>Technical Achievements</h2>
+        <ul>
+            <li><strong>Data Extraction with Python:</strong>
+                <ul>
+                    <li>Used Pandas for data processing, handling and manipulation.</li>
+                    <li>Utilized Shapely for geographical data processing.</li>
+                </ul>
+            </li>
+        </ul>
+        <ul>
+            <li><strong>Visualization with Leaflet:</strong>
+                <ul>
+                    <li>Implemented Leaflet for map visualization.</li>
+                    <li>Created an interactive heatmap overlaying population data on a map of Pisa.</li>
+                    <li>Ensured the heatmap was user-friendly and visually informative.</li>
+                </ul>
+            </li>
+        </ul>
     </div>
+
     <script src="../../parameters-behaviour.js"></script>
 </body>
 

@@ -79,7 +79,8 @@ body {
 }
 
 .text-box,
-.left-text-box {
+.left-text-box,
+.big-text-box {
     max-width: 60%;
     margin: 20px;
     padding-top: 15px;
@@ -92,6 +93,11 @@ body {
 
 .left-text-box {
     text-align: left;
+}
+
+.big-text-box{
+    min-width: 90%;
+    max-width: 90%;
 }
 
 .image {

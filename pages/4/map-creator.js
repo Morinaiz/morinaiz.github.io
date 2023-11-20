@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", function() {
     var baseLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         minZoom: 12,
         maxZoom: 17,    
-        attribution: '© OpenStreetMap contributors'
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors'
     })
 
     var heatmapLayer = new HeatmapOverlay({

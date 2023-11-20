@@ -47,6 +47,15 @@ body {
     text-align: center;
 }
 
+a {
+    color: #71C4E8;
+    text-decoration: none;
+}
+
+a:visited {
+    color: #D693ED; /* Replace with your preferred visited link color */
+}
+
 .icon-box,
 .light-icon-box {
     font-size: 0;

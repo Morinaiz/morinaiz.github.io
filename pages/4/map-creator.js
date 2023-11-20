@@ -29,14 +29,6 @@ document.addEventListener("DOMContentLoaded", function() {
     });
     map.addLayer(heatmapLayer);
 
-    map.on('zoomstart', function() {
-        heatmapLayer.setOptions({ maxOpacity: 0 }); // Set heatmap opacity to 0
-    });
-
-    map.on('zoomend', function() {
-        heatmapLayer.setOptions({ maxOpacity: 0.8 }); // Reset heatmap opacity to original value
-    });
-
     Papa.parse("data.csv", {
         download: true,
         header: true,

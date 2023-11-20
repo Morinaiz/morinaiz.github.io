@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", function() {
         blur: 1,
         maxOpacity: 0.8,
         scaleRadius: true,
-        useLocalExtrema: false,
+        useLocalExtrema: true,
         latField: 'lat',
         lngField: 'lng',
         valueField: 'value',

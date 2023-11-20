@@ -1,25 +1,16 @@
 document.addEventListener("DOMContentLoaded", function() {
-    var map = L.map('map', {
-        center: [43.716219, 10.399800],
-        zoom: 14,
-        zoomSnap: 0,
-        continuousWorld: true,
-        noWrap: true,
-        updateWhenIdle: true
-    })
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    var baseLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         minZoom: 11,
         maxZoom: 17,    
         attribution: '© OpenStreetMap contributors'
-    }).addTo(map);
+    })
 
     var heatmapLayer = new HeatmapOverlay({
         radius: 0.00052,
         blur: 1,
         maxOpacity: 0.8,
         scaleRadius: true,
-        useLocalExtrema: true,
+        useLocalExtrema: false,
         latField: 'lat',
         lngField: 'lng',
         valueField: 'value',
@@ -30,7 +21,16 @@ document.addEventListener("DOMContentLoaded", function() {
             1: '#FF3939'
         }
     });
-    map.addLayer(heatmapLayer);
+
+    var map = L.map('map', {
+        center: [43.716219, 10.399800],
+        zoom: 14,
+        zoomSnap: 0,
+        continuousWorld: true,
+        noWrap: true,
+        updateWhenIdle: true,
+        layers: [baseLayer, heatmapLayer]
+    })
 
     Papa.parse("data.csv", {
         download: true,
@@ -53,4 +53,5 @@ document.addEventListener("DOMContentLoaded", function() {
             });
         }
     });
+
 });

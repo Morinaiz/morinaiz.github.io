@@ -3,7 +3,6 @@ document.addEventListener("DOMContentLoaded", function() {
         center: [43.716219, 10.399800],
         zoom: 14,
         zoomSnap: 0,
-        worldCopyJump: true,
         continuousWorld: true,
         noWrap: true,
         updateWhenIdle: true

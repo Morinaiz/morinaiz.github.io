@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", function() {
     var baseLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        minZoom: 11,
+        minZoom: 12,
         maxZoom: 17,    
         attribution: '© OpenStreetMap contributors'
     })
@@ -32,9 +32,12 @@ document.addEventListener("DOMContentLoaded", function() {
         layers: [baseLayer, heatmapLayer]
     })
 
-    map.on('zoom', function(e) {
-        heatmapLayer._reset();
-        heatmapLayer._update();
+    map.on('zoomstart', function(e) {
+        map.removeLayer(heatmapLayer);
+    });
+
+    map.on('zoomend', function(e) {
+        map.addLayer(heatmapLayer);
     });
 
     Papa.parse("data.csv", {

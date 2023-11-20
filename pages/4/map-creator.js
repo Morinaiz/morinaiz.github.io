@@ -32,6 +32,11 @@ document.addEventListener("DOMContentLoaded", function() {
         layers: [baseLayer, heatmapLayer]
     })
 
+    map.on('zoom', function(e) {
+        heatmapLayer._reset();
+        heatmapLayer._update();
+    });
+
     Papa.parse("data.csv", {
         download: true,
         header: true,

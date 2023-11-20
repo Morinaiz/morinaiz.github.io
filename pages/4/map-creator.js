@@ -1,13 +1,17 @@
 document.addEventListener("DOMContentLoaded", function() {
-    var map = L.map('map').setView([43.716219, 10.399800], 14);
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    var map = L.map('map', {
+        center: [43.716219, 10.399800],
+        zoom: 14,
         zoomSnap: 0,
-        minZoom: 11,
-        maxZoom: 17,    
+        worldCopyJump: true,
         continuousWorld: true,
         noWrap: true,
-        updateWhenIdle: true,
+        updateWhenIdle: true
+    })
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        minZoom: 11,
+        maxZoom: 17,    
         attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 

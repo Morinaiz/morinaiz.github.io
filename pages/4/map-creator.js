@@ -1,8 +1,8 @@
 document.addEventListener("DOMContentLoaded", function() {
-    // Set initial view to Pisa's coordinates
     var map = L.map('map').setView([43.716219, 10.399800], 14);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        zoomSnap: 0,
         minZoom: 11,
         maxZoom: 17,    
         continuousWorld: true,
@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }).addTo(map);
 
     var heatmapLayer = new HeatmapOverlay({
-        radius: 0.00052,  // Reduced radius for a smaller heatmap area
+        radius: 0.00052,
         blur: 1,
         maxOpacity: 0.8,
         scaleRadius: true,
@@ -21,7 +21,6 @@ document.addEventListener("DOMContentLoaded", function() {
         lngField: 'lng',
         valueField: 'value',
         gradient: {
-            //0.2: '#4872FF',
             0.15: '#45DCF3',
             0.2: '#84F05E',
             0.5: '#FFFF46',
@@ -29,6 +28,14 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
     map.addLayer(heatmapLayer);
+
+    map.on('zoomstart', function() {
+        heatmapLayer.setOptions({ maxOpacity: 0 }); // Set heatmap opacity to 0
+    });
+
+    map.on('zoomend', function() {
+        heatmapLayer.setOptions({ maxOpacity: 0.8 }); // Reset heatmap opacity to original value
+    });
 
     Papa.parse("data.csv", {
         download: true,
@@ -39,14 +46,10 @@ document.addEventListener("DOMContentLoaded", function() {
             var data = results.data.map(function(item) {
                 var densityValue = parseFloat(item.density);
 
-                // Applying logarithmic transformation
-                // Ensure that densityValue is positive and non-zero
-                var logValue = densityValue > 0 ? densityValue / 15 : 0;
-
                 return {
                     lat: parseFloat(item.latitude),
                     lng: parseFloat(item.longitude),
-                    value: logValue
+                    value: densityValue > 0 ? densityValue / 15 : 0
                 };
             });
             heatmapLayer.setData({
@@ -56,4 +59,3 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
 });
-

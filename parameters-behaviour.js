@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", function() {
         const upworkParam = 'upwork';
         if (!currentHref.includes(upworkParam)) {
             const separator = currentHref.includes('?') ? '&' : '?';
-            homeButton.setAttribute('href', `${currentHref}${separator}${upworkParam}`); // Add an empty value
+            homeButton.setAttribute('href', `${currentHref}${separator}${upworkParam}`);
         }
     }
     if (urlParams.has('upwork')) {
@@ -22,6 +22,29 @@ document.addEventListener("DOMContentLoaded", function() {
         shareButton.addEventListener('click', function() {
             sharePage();
         });
+    }
+});
+
+document.getElementById('shareButton').addEventListener('auxclick', function(event) {
+    if (event.button === 1) {
+        event.preventDefault();
+
+        let url = new URL(window.location.href);
+        url.searchParams.delete('overlay');
+
+        if (url.searchParams.has('upwork')) {
+            url.searchParams.delete('upwork');
+            let newUrl = url.href.split('?')[0];
+            let params = Array.from(url.searchParams.entries()).map(entry => entry[0] + (entry[1] ? '=' + entry[1] : '')).join('&');
+            if (params) {
+                newUrl += '?' + params + '&upwork';
+            } else {
+                newUrl += '?upwork';
+            }
+            window.open(newUrl, '_blank');
+        } else {
+            window.open(url.toString(), '_blank');
+        }
     }
 });
 
@@ -46,7 +69,6 @@ function removeOverlayParamFromURL(url) {
     const params = new URLSearchParams(urlObj.search);
     params.delete('overlay');
 
-    // Manually construct the query string without equal signs for parameters without values
     let queryString = '';
     for (const [key, value] of params.entries()) {
         queryString += `${queryString ? '&' : ''}${encodeURIComponent(key)}${value ? '=' + encodeURIComponent(value) : ''}`;
@@ -54,7 +76,6 @@ function removeOverlayParamFromURL(url) {
 
     return `${urlObj.origin}${urlObj.pathname}${queryString ? '?' + queryString : ''}${urlObj.hash}`;
 }
-
 
 function copyTextToClipboard(text) {
     navigator.clipboard.writeText(text)
@@ -106,8 +127,6 @@ function showMessage(message) {
         }, 300);
     }, 2000);
 }
-
-
 
 function isMobileDevice() {
     return /Mobi/i.test(navigator.userAgent);

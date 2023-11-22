@@ -40,6 +40,36 @@ document.addEventListener("DOMContentLoaded", function() {
         map.addLayer(heatmapLayer);
     });
 
+    var legend = L.control({position: 'bottomright'});
+
+    legend.onAdd = function () {
+        var div = L.DomUtil.create('div', 'legend'),
+            grades = [0, 4, 8, 12, 16],
+            lineHTML = '<div class="thermometer-line"></div>',
+            markersHTML = '';
+    
+            for (var i = 0; i < grades.length; i++) {
+                var position = (i / (grades.length - 1)) * 80 + 10;
+                markersHTML += '<div class="marker" style="left: calc(' + position + '%);"><span>' + grades[i] + '</span></div>';
+            }
+        div.innerHTML = lineHTML + markersHTML;
+        return div;
+    };
+
+    legend.addTo(map);
+
+    function getGradientColor(value) {
+        var colors = {
+            0: '#45DCF3',
+            4: '#84F05E',
+            8: '#FFFF46',
+            12: '#FF943F',
+            16: '#FF3939'
+        };
+
+        return colors[value] || '#FFEDA0';
+    }
+
     Papa.parse("data.csv", {
         download: true,
         header: true,
@@ -61,5 +91,4 @@ document.addEventListener("DOMContentLoaded", function() {
             });
         }
     });
-
 });

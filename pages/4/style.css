@@ -17,6 +17,52 @@
     border-radius: 10px;
 }
 
+.legend {
+    width: 200px;
+    position: relative;
+    display: block;
+    background-color: #ffffffff;
+    border-radius: 2px;
+    color: #3C4558;
+    outline: 2px solid #00000039;
+    font-size: 16px;
+    font-family: 'Oxygen Mono', monospace;
+    padding-top:50px;
+    padding-left:25px;
+    padding-right:25px;
+    padding-bottom:20px;
+}
+
+.thermometer-line {
+    width: 200px;
+    height: 12px;
+    margin: 0;
+    background: linear-gradient(to right, 
+        #45DCF3 0%,
+        #84F05E 25%,
+        #FFFF46 50%,
+        #FF3939 100%);
+}
+
+.marker {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    width: 1px;
+    height: 22px;
+    background-color: black;
+    transform: translateX(-50%);
+}
+
+.marker span {
+    position: absolute;
+    bottom: 00%; /* Aligns the bottom of the text with the top of the marker */
+    left: 50%;
+    transform: translate(-50%, -100%); /* Centers the text horizontally and moves it above the marker */
+    color: black;
+}
+
+
 @media (max-width: 800px) {
     #map-box {
         width: 90%;

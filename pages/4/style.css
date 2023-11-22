@@ -40,7 +40,7 @@
     background: linear-gradient(to right, 
         #45DCF3 0%,
         #84F05E 25%,
-        #FFFF46 50%,
+        #FFFF45 50%,
         #FF3939 100%);
 }
 
@@ -59,7 +59,6 @@
     bottom: 00%; /* Aligns the bottom of the text with the top of the marker */
     left: 50%;
     transform: translate(-50%, -100%); /* Centers the text horizontally and moves it above the marker */
-    color: black;
 }
 
 

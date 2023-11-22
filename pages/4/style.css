@@ -50,7 +50,7 @@
     left: 50%;
     width: 1px;
     height: 22px;
-    background-color: black;
+    background-color: #000000FF;
     transform: translateX(-50%);
 }
 

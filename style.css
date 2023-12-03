@@ -113,6 +113,7 @@ a:visited {
 .image {
     margin: 6px auto;
     max-width: 60%;
+    width: auto;
 }
 
 #gallery {
@@ -243,7 +244,7 @@ a:visited {
     .left-text-box,
     .image,
     .gallery-small {
-        width: 90%;
+        max-width: 90%;
     }
 }
 
@@ -255,6 +256,6 @@ a:visited {
     .left-text-box,
     .image,
     .gallery-small {
-        width: 40%;
+        max-width: 40%;
     }
 }

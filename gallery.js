@@ -33,7 +33,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function appendImageToShortestColumn(img, imageContainer, imagePath) {
         let columnIndex = findShortestColumn();
-        const projectPath = imagePath.replace('lowResCover.webp', 'project.html');
+        const projectPath = imagePath.replace('cover.webp', 'project.html');
         img.addEventListener('click', () => {
             openOverlay(projectPath);
         });

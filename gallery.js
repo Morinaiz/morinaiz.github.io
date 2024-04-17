@@ -63,7 +63,7 @@ document.addEventListener("DOMContentLoaded", function () {
         highResImage.open('GET', imagePath, true);
         highResImage.responseType = 'blob';
         highResImage.alt = `Cover Project ${folderNumber}`;
-        
+
         highResImage.onload = function () {
             if (this.status === 200) {
                 let blob = this.response;
@@ -98,6 +98,7 @@ document.addEventListener("DOMContentLoaded", function () {
     
         lowResImg.alt = `Cover Project Low Res ${folderNumber}`;
         lowResImg.onload = () => {
+            lowResImg.style.display = "block";
             appendImageToShortestColumn(lowResImg, imageContainer, lowResImagePath);
             loadHighResImage(highResImagePath, folderNumber, imageContainer);
             loadNextFolderImage(folderNumber - 1);

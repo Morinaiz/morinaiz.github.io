@@ -68,6 +68,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (this.status === 200) {
                 let blob = this.response;
                 let img = document.createElement('img');
+                img.alt = `Cover Project ${folderNumber}`; 
                 img.onload = () => {
                     window.URL.revokeObjectURL(img.src);
                     appendImageToShortestColumn(img, imageContainer, imagePath);

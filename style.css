@@ -129,10 +129,13 @@ a:visited {
     flex-basis: calc(100% / 2 - 10px);
 }
 
-#gallery img {
+.image-container{
     width: 100%;
-    height: auto;
-    max-height: 400px;
+}
+
+#gallery img {
+    min-width:inherit;
+    width: 100%;
     object-fit: cover;
     border-radius: 5px;
     transition: transform 0.3s ease, border-color 0.3s ease;
@@ -190,6 +193,7 @@ a:visited {
     justify-content: center;
     transition: background-color 0.3s, transform 0.3s;
 }
+
 
 .close-btn:hover, .close-btn:focus {
     background-color: #E13939;

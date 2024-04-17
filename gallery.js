@@ -31,30 +31,102 @@ document.addEventListener("DOMContentLoaded", function () {
         return columnHeights.indexOf(Math.min(...columnHeights));
     }
 
-    function appendImageToShortestColumn(img, imagePath) {
+    function appendImageToShortestColumn(img, imageContainer, imagePath) {
         let columnIndex = findShortestColumn();
         const projectPath = imagePath.replace('cover.png', 'project.html');
         img.addEventListener('click', () => {
             openOverlay(projectPath);
         });
-        columns[columnIndex].appendChild(img);
-        columnHeights[columnIndex] += img.height;
+    
+        if (imageContainer.parentNode) {
+            imageContainer.replaceChild(img, imageContainer.firstChild);
+        } else {
+            imageContainer.appendChild(img);
+            columns[columnIndex].appendChild(imageContainer);
+        }
+    
+        setTimeout(() => {
+            columnHeights[columnIndex] = calculateColumnHeight(columns[columnIndex]);
+        }, 0);
+    }
+    
+    function calculateColumnHeight(column) {
+        let height = 0;
+        Array.from(column.children).forEach(child => {
+             height += child.offsetHeight;
+        });
+        return height;
+    }
+    
+    function loadHighResImageWithProgress(imagePath, folderNumber, imageContainer) {
+        let highResImage = new XMLHttpRequest();
+        highResImage.open('GET', imagePath, true);
+        highResImage.responseType = 'blob';
+    
+        highResImage.onprogress = function (e) {
+            if (e.lengthComputable) {
+                let percentComplete = (e.loaded / e.total) * 100;
+                updatePhysicsSimulation(imageContainer, percentComplete);
+            }
+        };
+    
+        highResImage.onload = function () {
+            if (this.status === 200) {
+                let blob = this.response;
+                let img = document.createElement('img');
+                img.onload = () => {
+                    window.URL.revokeObjectURL(img.src);
+                    appendImageToShortestColumn(img, imageContainer, imagePath);
+                    removePhysicsSimulation(imageContainer);
+                };
+                img.src = window.URL.createObjectURL(blob);
+            }
+        };
+    
+        highResImage.onerror = function () {
+            console.log(`Error loading high-res image /${folderNumber}/`);
+        };
+    
+        highResImage.send();
+    }
+
+    function removePhysicsSimulation(imageContainer) {
+        if (engine) {
+            Matter.Engine.clear(engine);
+        }
+    
+        let canvas = imageContainer.querySelector('canvas');
+        if (canvas) {
+            imageContainer.removeChild(canvas);
+        }
     }
 
     function loadNextFolderImage(folderNumber) {
-        let imagePath = `pages/${folderNumber}/cover.png`;
-        let img = new Image();
-        img.alt = "Cover Project " + folderNumber;
-        img.onload = () => {
-            appendImageToShortestColumn(img, imagePath);
-            if (folderNumber > 1) loadNextFolderImage(folderNumber - 1);
+        if (folderNumber < 1) {
+            return;
+        }
+    
+        let lowResImagePath = `pages/${folderNumber}/coverLowRes.webp`;
+        let highResImagePath = `pages/${folderNumber}/cover.webp`;
+    
+        let imageContainer = document.createElement("div");
+        imageContainer.className = 'image-container';
+    
+        let lowResImg = new Image();
+    
+        lowResImg.alt = `Cover Project Low Res ${folderNumber}`;
+        lowResImg.onload = () => {
+            appendImageToShortestColumn(lowResImg, imageContainer, lowResImagePath);
+            lowResImg.style.display = "none";
+            loadHighResImageWithProgress(highResImagePath, folderNumber, imageContainer);
+            loadNextFolderImage(folderNumber - 1);
         };
-        img.onerror = () => {
-            console.log(`Can't find folder number /${folderNumber - 1}/`);
+        lowResImg.onerror = () => {
+            console.log(`Can't load low-res image /${folderNumber}/`);
         };
-        img.src = imagePath;
+        lowResImg.src = lowResImagePath;
     }
-
+    
     function setupAndLoadImages() {
         setupColumns(calculateColumns());
         loadNextFolderImage(currentFolderIndex);

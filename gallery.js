@@ -33,7 +33,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function appendImageToShortestColumn(img, imageContainer, imagePath) {
         let columnIndex = findShortestColumn();
-        const projectPath = imagePath.replace('cover.webp', 'project.html');
+        const projectPath = imagePath.replace('lowResCover.webp', 'project.html');
         img.addEventListener('click', () => {
             openOverlay(projectPath);
         });
@@ -62,7 +62,8 @@ document.addEventListener("DOMContentLoaded", function () {
         let highResImage = new XMLHttpRequest();
         highResImage.open('GET', imagePath, true);
         highResImage.responseType = 'blob';
-    
+        highResImage.alt = `Cover Project ${folderNumber}`;
+        
         highResImage.onload = function () {
             if (this.status === 200) {
                 let blob = this.response;
@@ -98,7 +99,6 @@ document.addEventListener("DOMContentLoaded", function () {
         lowResImg.alt = `Cover Project Low Res ${folderNumber}`;
         lowResImg.onload = () => {
             appendImageToShortestColumn(lowResImg, imageContainer, lowResImagePath);
-            lowResImg.style.display = "none";
             loadHighResImage(highResImagePath, folderNumber, imageContainer);
             loadNextFolderImage(folderNumber - 1);
         };

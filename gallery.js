@@ -58,17 +58,10 @@ document.addEventListener("DOMContentLoaded", function () {
         return height;
     }
     
-    function loadHighResImageWithProgress(imagePath, folderNumber, imageContainer) {
+    function loadHighResImage(imagePath, folderNumber, imageContainer) {
         let highResImage = new XMLHttpRequest();
         highResImage.open('GET', imagePath, true);
         highResImage.responseType = 'blob';
-    
-        highResImage.onprogress = function (e) {
-            if (e.lengthComputable) {
-                let percentComplete = (e.loaded / e.total) * 100;
-                updatePhysicsSimulation(imageContainer, percentComplete);
-            }
-        };
     
         highResImage.onload = function () {
             if (this.status === 200) {
@@ -77,7 +70,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 img.onload = () => {
                     window.URL.revokeObjectURL(img.src);
                     appendImageToShortestColumn(img, imageContainer, imagePath);
-                    removePhysicsSimulation(imageContainer);
                 };
                 img.src = window.URL.createObjectURL(blob);
             }
@@ -88,17 +80,6 @@ document.addEventListener("DOMContentLoaded", function () {
         };
     
         highResImage.send();
-    }
-
-    function removePhysicsSimulation(imageContainer) {
-        if (engine) {
-            Matter.Engine.clear(engine);
-        }
-    
-        let canvas = imageContainer.querySelector('canvas');
-        if (canvas) {
-            imageContainer.removeChild(canvas);
-        }
     }
 
     function loadNextFolderImage(folderNumber) {
@@ -118,7 +99,7 @@ document.addEventListener("DOMContentLoaded", function () {
         lowResImg.onload = () => {
             appendImageToShortestColumn(lowResImg, imageContainer, lowResImagePath);
             lowResImg.style.display = "none";
-            loadHighResImageWithProgress(highResImagePath, folderNumber, imageContainer);
+            loadHighResImage(highResImagePath, folderNumber, imageContainer);
             loadNextFolderImage(folderNumber - 1);
         };
         lowResImg.onerror = () => {

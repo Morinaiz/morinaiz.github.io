@@ -19,7 +19,9 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function calculateColumns() {
-        if (window.innerWidth < 800) {
+        const aspectRatio = window.innerWidth / window.innerHeight;
+
+        if (window.innerWidth < 800 || aspectRatio < 1) {
             return 1;
         } else if (window.innerWidth < 1200) {
             return 2;

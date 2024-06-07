@@ -12,11 +12,11 @@ header {
     background-color: #3C4558;
     margin-bottom: 15px;
     color: #F4F8FF;
-    font-family: 'Cascadia Mono', monospace;
+    font-family: 'Cascadia Code', monospace;
 }
 
 h1, h2, h3, h4, h5, h6 {
-    font-family: 'Cascadia Mono', monospace;
+    font-family: 'Cascadia Code', monospace;
 }
 
 header h2 {

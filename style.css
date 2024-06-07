@@ -41,6 +41,7 @@ body {
     padding: 0;
     text-align: center;
     font-family: 'Cascadia Code', sans-serif;
+    font-size: larger;
 }
 
 a {
@@ -54,7 +55,6 @@ a:visited {
 
 .icon-box,
 .light-icon-box {
-    font-size: 0;
     display: flex;
     flex-direction: row;
     background-color: #3C4558;
@@ -171,17 +171,16 @@ a:visited {
     height: 100%;
 }
 
-
 .close-btn {
     position: absolute;
     top: 10px;
-    right: 15px;
+    right: 20px;
     width: 40px;
     height: 40px;
     background-color: #46526B;
     color: #F4F8FF;
     border: none;
-    font-size: 28px;
+    font-size: 30px;
     cursor: pointer;
     border-radius: 50%;
     display: flex;

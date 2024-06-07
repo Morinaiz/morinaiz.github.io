@@ -13,6 +13,7 @@ header {
     margin-bottom: 15px;
     color: #F4F8FF;
     font-family: 'Cascadia Code', monospace;
+    font-size: large;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -32,8 +33,8 @@ body {
     margin: 0;
     padding: 0;
     text-align: center;
-    font-family: 'Cascadia Code', sans-serif;
-    font-size: larger;
+    font-family: 'Cascadia Code', monospace;
+    font-size: medium;
 }
 
 a {

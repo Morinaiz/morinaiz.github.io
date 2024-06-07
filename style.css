@@ -40,8 +40,8 @@ body {
     margin: 0;
     padding: 0;
     text-align: center;
-    font-family: 'Cascadia Code', sans-serif;
-    font-size: larger;
+    font-family: 'Cascadia Code';
+    font-size: medium;
 }
 
 a {

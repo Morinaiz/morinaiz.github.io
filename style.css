@@ -1,17 +1,9 @@
-@import url('https://fonts.googleapis.com/css2?family=Oxygen+Mono&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cascadia+Mono&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code&display=swap');
 
 @font-face {
-    font-family: 'Oxygen';
-    src: url('data/Oxygen-Regular.woff2') format('woff2');
-    src: url('data/Oxygen-Regular.woff') format('woff');
-    font-weight: normal;
-    font-style: normal;
-}
-
-@font-face {
-    font-family: 'Oxygen Mono';
-    src: url('data/OxygenMono-Regular.woff2') format('woff2');
-    src: url('data/OxygenMono-Regular.woff') format('woff');
+    font-family: 'Cascadia Mono';
+    src: url('https://cdn.jsdelivr.net/npm/@fontsource/cascadia-mono@4.2.1/files/cascadia-mono-latin-400-normal.woff2') format('woff2');
     font-weight: normal;
     font-style: normal;
 }
@@ -28,7 +20,7 @@ header {
     background-color: #3C4558;
     margin-bottom: 15px;
     color: #F4F8FF;
-    font-family: 'Oxygen Mono', monospace;
+    font-family: 'Cascadia Mono', monospace;
 }
 
 header h2 {
@@ -41,10 +33,10 @@ body {
     flex-direction: column;
     background-color: #2E343F;
     color: #F4F8FF;
-    font-family: 'Oxygen Mono', monospace;
     margin: 0;
     padding: 0;
     text-align: center;
+    font-family: 'Fira Code', monospace;
 }
 
 a {

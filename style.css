@@ -1,12 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Cascadia+Mono&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Fira+Code&display=swap');
-
-@font-face {
-    font-family: 'Cascadia Mono';
-    src: url('https://cdn.jsdelivr.net/npm/@fontsource/cascadia-mono@4.2.1/files/cascadia-mono-latin-400-normal.woff2') format('woff2');
-    font-weight: normal;
-    font-style: normal;
-}
+@import url('https://fonts.cdnfonts.com/css/cascadia-code');
 
 header {
     display: flex;
@@ -41,7 +33,7 @@ body {
     padding: 0;
     text-align: center;
     font-family: 'Cascadia Code', sans-serif;
-    font-size: large;
+    font-size: larger;
 }
 
 a {

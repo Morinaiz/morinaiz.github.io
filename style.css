@@ -40,11 +40,7 @@ body {
     margin: 0;
     padding: 0;
     text-align: center;
-    font-family: 'Fira Code', monospace;
-}
-
-h1, h2, h3, h4, h5, h6 {
-    font-family: 'Your Font Name', sans-serif; /* Replace 'Your Font Name' with your actual font name */
+    font-family: 'Cascadia Mono', monospace;
 }
 
 a {

@@ -1,4 +1,3 @@
-// Declare overlayOpen globally so that it's accessible by both functions
 let overlayOpen = false;
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -15,7 +14,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function appendPostToColumn(postContainer, postPath, column) {
         postContainer.addEventListener('click', () => {
-            openOverlay(postPath);  // Open the overlay on click
+            openOverlay(postPath);
         });
         column.appendChild(postContainer);
     }
@@ -94,8 +93,8 @@ function openOverlay(postPath) {
     `;
 
     document.body.appendChild(overlay);
-    overlay.style.opacity = "0";  // Initially hidden
-    overlay.style.visibility = "hidden";  // Initially hidden
+    overlay.style.opacity = "0";
+    overlay.style.visibility = "hidden";
 
     overlay.addEventListener('click', function (e) {
         if (e.target.id === "overlay") {
@@ -103,7 +102,6 @@ function openOverlay(postPath) {
         }
     });
 
-    // Trigger visibility and opacity to make the overlay appear
     setTimeout(() => {
         overlay.style.opacity = "1";
         overlay.style.visibility = "visible";
@@ -120,7 +118,7 @@ function closeOverlay() {
         overlay.style.opacity = "0";
         overlay.style.visibility = "hidden";
         setTimeout(() => {
-            overlay.remove();  // Remove the overlay from DOM after transition
+            overlay.remove();
         }, 300);
     }
 

@@ -1,10 +1,10 @@
 .heightmap-table,
 .basegrid-table {
     background-color: #3c4558;
-    border-radius: 3x;
-    width: auto;
+    border-radius: 3px;
+    width: 100%;
     border-spacing: 1px;
-    table-layout:fixed;
+    table-layout: fixed
 }
 
 .basegrid-table td {

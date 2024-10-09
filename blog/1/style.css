@@ -16,6 +16,7 @@
     height: 20px;
     background-color: #46526B;
     margin: 0;
+    overflow: hidden;
 }
 
 .heightmap-table td {

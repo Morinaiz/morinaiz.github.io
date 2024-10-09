@@ -2,12 +2,12 @@
 .basegrid-table {
     background-color: #3c4558;
     border-radius: 3x;
-    width: 100%;
+    width: auto;
     border-spacing: 1px;
+    table-layout:fixed;
 }
 
 .basegrid-table td {
-    table-layout: fixed;
     box-sizing: border-box;
     line-height: 0;
     padding: 0;
@@ -17,6 +17,7 @@
     background-color: #46526B;
     margin: 0;
     overflow: hidden;
+    text-overflow: clip
 }
 
 .heightmap-table td {

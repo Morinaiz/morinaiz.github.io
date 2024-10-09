@@ -16,8 +16,11 @@
     background-color: #46526B;
     margin: 0;
     overflow: hidden;
+    text-align: center;
+    vertical-align: middle;
     text-overflow: clip;
     box-sizing: border-box;
+    font-family: 'Cascadia Code', monospace;
 }
 
 .heightmap-table td {
@@ -25,4 +28,5 @@
     margin: 0;
     width: 20px;
     height: 20px;
+    font-family: 'Cascadia Code', monospace;
 }

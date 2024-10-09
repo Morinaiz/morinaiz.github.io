@@ -10,12 +10,12 @@
 
 .basegrid-table td {
     line-height: 0;
-    font-size: 36px;
+    font-size: 37px;
     background-color: #46526B;
     margin: 0;
     width: 20px;
     height: 20px;
-    font-family: 'Cascadia Code', monospace;
+    font-family: 'Cascadia Mono', monospace;
 }
 
 .heightmap-table td {
@@ -23,5 +23,6 @@
     margin: 0;
     width: 20px;
     height: 20px;
-    font-family: 'Cascadia Code', monospace;
+    font-family: 'Cascadia Mono', monospace;
 }
+

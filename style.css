@@ -63,6 +63,14 @@ a:visited {
     color: #F4F8FF;
 }
 
+.icon{
+    display: inline-flex
+}
+
+.social-icon{
+    display: none
+}
+
 .icon img,
 .social-icon img {
     border-radius: 0px;
@@ -228,6 +236,31 @@ a:visited {
     background-color: #71C4E8;
 }
 
+.post-container {
+    width: 80%;
+    margin: auto;
+    text-align: center;
+    background-color: #46526B;
+    padding: 20px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.post-container img {
+    width: 60%;
+    height: auto;
+    border-radius: 5px;
+}
+
+.post-container h2 {
+    margin: 15px 0;
+    color: #F4F8FF;
+}
+
+.post-container p {
+    color: #D1D5DB;
+}
+
 @media (max-width: 800px) or (max-aspect-ratio: 1) {
     #gallery .column {
         flex-basis: calc(100% / 1 - 10px);
@@ -235,8 +268,10 @@ a:visited {
     .text-box,
     .left-text-box,
     .image,
-    .gallery-small {
-        max-width: 90%;
+    .gallery-small,
+    .post-container,
+    .post-container img {
+        width: 90%;
     }
 }
 
@@ -247,7 +282,11 @@ a:visited {
     .text-box,
     .left-text-box,
     .image,
-    .gallery-small {
-        max-width: 40%;
+    .gallery-small,
+    .post-container {
+        width: 40%;
+    }
+    .post-container img{
+        width: 60%;
     }
 }

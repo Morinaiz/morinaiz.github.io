@@ -1,6 +1,8 @@
 document.addEventListener("DOMContentLoaded", function() {
     const urlParams = new URLSearchParams(window.location.search);
     const homeButton = document.getElementById('home-button');
+    const blogLink = document.getElementById('blogLink');
+    const portfolioLink = document.getElementById('portfolioLink');
     if (urlParams.has('overlay')) {
         if (homeButton) homeButton.style.display = 'none';
     }
@@ -12,9 +14,28 @@ document.addEventListener("DOMContentLoaded", function() {
             homeButton.setAttribute('href', `${currentHref}${separator}${upworkParam}`);
         }
     }
-    if (urlParams.has('upwork')) {
+    
+    if (blogLink && urlParams.has('upwork')) {
+        const currentHref = blogLink.getAttribute('href');
+        const upworkParam = 'upwork';
+        if (!currentHref.includes(upworkParam)) {
+            const separator = currentHref.includes('?') ? '&' : '?';
+            blogLink.setAttribute('href', `${currentHref}${separator}${upworkParam}`);
+        }
+    }
+    
+    if (portfolioLink && urlParams.has('upwork')) {
+        const currentHref = portfolioLink.getAttribute('href');
+        const upworkParam = 'upwork';
+        if (!currentHref.includes(upworkParam)) {
+            const separator = currentHref.includes('?') ? '&' : '?';
+            portfolioLink.setAttribute('href', `${currentHref}${separator}${upworkParam}`);
+        }
+    }
+
+    if (!urlParams.has('upwork')) {
         document.querySelectorAll('.social-icon').forEach(element => {
-            element.style.display = 'none';
+            element.style.display = 'inline-flex';
         });
     }
     const shareButton = document.getElementById('shareButton');

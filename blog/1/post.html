@@ -1,0 +1,3526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A deep dive into procedural level generation in Unity using Voronoi diagrams.">
+    <meta property="og:image" content="./cover.webp">
+    <title>Voronoi 3D Procedural Level Generation</title>
+    <link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+    <header>
+        <h1>Procedural Level Generation in Unity</h1>
+        <h2>Creating Dynamic Terrains with Voronoi Diagrams</h2>
+        <section class="light-icon-box">
+            <a id="home-button" href="../../blog.html" class="icon" target="_blank" rel="noopener noreferrer"><img src="../../data/home-icon.svg" alt="Home" /></a>
+            <a href="https://www.upwork.com/freelancers/~01067b5eb71db874ad" class="icon" target="_blank" rel="noopener noreferrer"><img src="../../data/upwork-icon.svg" alt="Upwork" /></a>
+            <a href="#" onclick="event.preventDefault()" id="shareButton" class="icon" target="_blank" rel="noopener noreferrer"><img src="../../data/share-icon.svg" alt="Share" /></a>
+            <script src="../../parameters-behaviour.js"></script>    
+        </section>
+        <p class="post-date">2024-10-09</p>
+    </header>
+
+    <div class="left-text-box">
+        <h1>Introduction</h1>
+        <p>While working on my RTT videogame, I encountered the very common problem of how to procedurally generate levels.
+            After going back and forth between Perlin and Voronoi for about a week, I landed up on an algorithm that makes it possible to
+            generate complicated 3D levels, with a variety of structures in it, always completely walkable.</p>
+        <p>The generation process starts with the creation of a height map. I begin by creating a grid using Voronoi diagrams.
+            The number of Voronoi points, minimum distance between them, and the "relaxation" (which determines how evenly spaced they are)
+            can all be customized.</p>
+        <p>Next, I use an algorithm to determine which Voronoi cells touch each other and create a graph connecting these cells.
+            I run a depth-first search (DFS) on this graph to create a tree—a path that connects all the cells randomly.</p>
+        <p>Then, I assign heights. Starting from one cell, I traverse the graph, giving each adjacent cell a height difference of -1, 0, or 1,
+            ensuring a smooth elevation change of 1 unit at most between connected cells. Once the heights are assigned to the cells,
+            I set the height for every individual square within each cell to match the given height.</p>
+    </div>
+    <img src="voronoiHeightmap.webp" alt="Voronoi Height Map Generation" class="image">
+    <div class="left-text-box">
+        <p>This is how the heightmap looks like, after applying all the steps above. From now until the end of the post, I will show
+            the Unicode map log that gets automatically created every time I generate a new map.
+        </p>
+    </div>
+
+    
+    
+    <style>
+    .heightmap-table {
+        background-color: #3c4558; /* Background color for the entire table */
+        border-radius: 3x;
+        width: 100%; /* Optional: Sets the table width to fill the container */
+        border-spacing: 1px; /* Set the spacing between cells to 1 pixel */
+    }
+    
+    .heightmap-table td {
+        background-color: #46526B; /* Background color for the entire table */
+        margin: 0; /* Removes any margin between table cells */
+        width: 20px;
+        height: 20px;
+    }
+    </style>
+    <div class='container'>
+        <h3>Height Map</h3>
+        <table class='heightmap-table' cellspacing='0' cellpadding='0'>
+        <tr>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        </tr>
+        <tr>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        </tr>
+        <tr>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        </tr>
+        <tr>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        </tr>
+        <tr>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        </tr>
+        <tr>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        </tr>
+        <tr>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        </tr>
+        <tr>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        </tr>
+        <tr>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        </tr>
+        <tr>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        </tr>
+        <tr>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        </tr>
+        <tr>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        </tr>
+        <tr>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        </tr>
+        <tr>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        </tr>
+        <tr>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        </tr>
+        <tr>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        </tr>
+        </table>
+    </div>
+
+
+
+    <div class="left-text-box">
+        <p>The final step of height map generation is another relaxation algorithm, which smooths the terrain further,
+            but this time it operates on the individual squares, not the Voronoi cells.
+            As you can see, the difference of values between adjacent cells has now been reduced.
+            This step is purely optional, and cannot make the map not trasversable by units</p>
+    </div>
+
+
+    <div class='container'>
+        <h3>Relaxed Height Map</h3>
+        <table class='heightmap-table' cellspacing='0' cellpadding='0'>
+        <tr>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        </tr>
+        <tr>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        </tr>
+        <tr>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        </tr>
+        <tr>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        </tr>
+        <tr>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        </tr>
+        <tr>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        </tr>
+        <tr>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        </tr>
+        <tr>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        </tr>
+        <tr>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        </tr>
+        <tr>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        </tr>
+        <tr>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        </tr>
+        <tr>
+        <td style='color: #44A65F;'>
+        <span class='scaled-text'>2</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        </tr>
+        <tr>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        </tr>
+        <tr>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        </tr>
+        <tr>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        </tr>
+        <tr>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #5EBC78;'>
+        <span class='scaled-text'>3</span>
+        </td>
+        <td style='color: #79D292;'>
+        <span class='scaled-text'>4</span>
+        </td>
+        <td style='color: #94E9AC;'>
+        <span class='scaled-text'>5</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        <td style='color: #AFFFC5;'>
+        <span class='scaled-text'>6</span>
+        </td>
+        </tr>
+        </table>
+    </div>
+
+    <div class="left-text-box">
+        <h2>Creating the Base Grid</h2>
+        <p>The base grid is the intermediate step between the height map and the final grid.
+            Its purpose is to divide the terrain into four types: terrain, empty, ramps, and structures.</p>
+        <p>The first step is converting the height map into a 3D grid, which consists of only two values:
+            empty and terrain. Next, ramps are added wherever necessary to make the map navigable.
+            Finally, ramps are gradually removed in two stages.</p>
+        <p>In the first stage, I identify the terrain patches and count the number of connections (ramps)
+            between patches with different elevations. I reduce the connections, keeping only a percentage of them.
+            In the second stage, I remove any ramps that touch each other, even diagonally.</p>
+    </div>
+
+
+    <style>
+        .basegrid-table {
+            background-color: #3c4558; /* Background color for the entire table */
+            border-radius: 3x;
+            width: 100%; /* Optional: Sets the table width to fill the container */
+            border-spacing: 1px; /* Set the spacing between cells to 1 pixel */
+            width: 18px;
+            height: 20px;
+            margin: auto;
+        }
+        
+        .basegrid-table td {
+            line-height: 0;
+            padding: 0;
+            height: 21px;
+            font-size:36px;
+            background-color: #46526B; /* Background color for the entire table */
+            margin: 0; /* Removes any margin between table cells */
+        }
+    </style>
+
+
+
+    
+    <div class='container'>
+        <h3>Base Grid Visualization</h3>
+        <table class='basegrid-table' cellspacing='0' cellpadding='0'>
+        <tr>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        </tr>
+        <tr>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        </tr>
+        <tr>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        </tr>
+        <tr>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        </tr>
+        <tr>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        </tr>
+        <tr>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        </tr>
+        <tr>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        </tr>
+        <tr>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        </tr>
+        <tr>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        </tr>
+        <tr>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        </tr>
+        <tr>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        </tr>
+        <tr>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        </tr>
+        <tr>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        </tr>
+        <tr>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        </tr>
+        <tr>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        </tr>
+        <tr>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        </tr>
+        </table>
+    </div>
+
+    <div class="left-text-box">
+        <h2>Adding Ramps</h2>
+        <p>After setting up the base grid, ramps are added between different elevations to ensure the map is navigable.
+            Once the ramps are in place, I begin the process of removing ramps to optimize the terrain.</p>
+        <p>In the first pass, I reduce the number of ramps between patches with different heights,
+            leaving only a percentage of the original connections. In the second pass, I remove any ramps that are touching,
+            even diagonally, to further refine the level design.</p>
+    </div>
+    <div class='container'>
+    <table class='basegrid-table' cellspacing='0' cellpadding='0'>
+    <tr>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    </tr>
+    <tr>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>↑</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #94E9AC;'>↑</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    </tr>
+    <tr>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>↑</td>
+    <td style='color: #94E9AC;'>↑</td>
+    <td style='color: #94E9AC;'>↑</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #94E9AC;'>↑</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    </tr>
+    <tr>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>↑</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>↑</td>
+    <td style='color: #79D292;'>↑</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #94E9AC;'>↑</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    </tr>
+    <tr>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #5EBC78;'>↑</td>
+    <td style='color: #5EBC78;'>↑</td>
+    <td style='color: #5EBC78;'>↑</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #94E9AC;'>↑</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    </tr>
+    <tr>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #94E9AC;'>↑</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    </tr>
+    <tr>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #5EBC78;'>↑</td>
+    <td style='color: #79D292;'>↑</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #94E9AC;'>↑</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    </tr>
+    <tr>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #5EBC78;'>↑</td>
+    <td style='color: #79D292;'>↑</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #94E9AC;'>↑</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #AFFFC5;'>↑</td>
+    <td style='color: #AFFFC5;'>↑</td>
+    <td style='color: #AFFFC5;'>↑</td>
+    <td style='color: #AFFFC5;'>↑</td>
+    <td style='color: #AFFFC5;'>■</td>
+    </tr>
+    <tr>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #5EBC78;'>↑</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #79D292;'>↑</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #94E9AC;'>↑</td>
+    <td style='color: #AFFFC5;'>↑</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    </tr>
+    <tr>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #5EBC78;'>↑</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #79D292;'>↑</td>
+    <td style='color: #94E9AC;'>↑</td>
+    <td style='color: #AFFFC5;'>↑</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    </tr>
+    <tr>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #5EBC78;'>↑</td>
+    <td style='color: #5EBC78;'>↑</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #79D292;'>↑</td>
+    <td style='color: #94E9AC;'>↑</td>
+    <td style='color: #AFFFC5;'>↑</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    </tr>
+    <tr>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #5EBC78;'>↑</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #79D292;'>↑</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    </tr>
+    <tr>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #79D292;'>↑</td>
+    <td style='color: #94E9AC;'>↑</td>
+    <td style='color: #AFFFC5;'>↑</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    </tr>
+    <tr>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #79D292;'>↑</td>
+    <td style='color: #94E9AC;'>↑</td>
+    <td style='color: #AFFFC5;'>↑</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    </tr>
+    <tr>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #79D292;'>↑</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    </tr>
+    <tr>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    </tr>
+    </table>
+    </div>
+
+    <div class="left-text-box">
+        <h2>Removing unnecessary Ramps</h2>
+        <p>After all the ramps have been added, 2 algorithms are used to remove the extra ramps.</p>
+        <p>The first one used a BFS in order to find out how many points of connection there are between different patches of terrain.
+        It then removes a percentage of them, while still making sure that the map is still walkable</p>
+        <p>The second one, instead, examines the whole grid, and removes any ramp that is adjacent to another ramp.
+            This way, the terrain is more difficult to traverse, and the map looks nicer.</p>
+    </div>
+
+    <div class='container'>
+    <h3>Removing ramps by percentage</h3>
+    <table class='basegrid-table' cellspacing='0' cellpadding='0'>
+    <tr>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    </tr>
+    <tr>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>↑</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    </tr>
+    <tr>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>↑</td>
+    <td style='color: #94E9AC;'>↑</td>
+    <td style='color: #94E9AC;'>↑</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    </tr>
+    <tr>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>↑</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>↑</td>
+    <td style='color: #79D292;'>↑</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #94E9AC;'>↑</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    </tr>
+    <tr>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #5EBC78;'>↑</td>
+    <td style='color: #5EBC78;'>↑</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    </tr>
+    <tr>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    </tr>
+    <tr>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #79D292;'>↑</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    </tr>
+    <tr>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>↑</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    </tr>
+    <tr>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #94E9AC;'>↑</td>
+    <td style='color: #AFFFC5;'>↑</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    </tr>
+    <tr>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #5EBC78;'>↑</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #79D292;'>↑</td>
+    <td style='color: #94E9AC;'>↑</td>
+    <td style='color: #AFFFC5;'>↑</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    </tr>
+    <tr>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #5EBC78;'>↑</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #79D292;'>↑</td>
+    <td style='color: #94E9AC;'>↑</td>
+    <td style='color: #AFFFC5;'>↑</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    </tr>
+    <tr>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    </tr>
+    <tr>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #94E9AC;'>↑</td>
+    <td style='color: #AFFFC5;'>↑</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    </tr>
+    <tr>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #79D292;'>↑</td>
+    <td style='color: #94E9AC;'>↑</td>
+    <td style='color: #AFFFC5;'>↑</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    </tr>
+    <tr>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #79D292;'>↑</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    </tr>
+    <tr>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    </tr>
+    </table>
+    </div>
+    
+    <div class='container'>
+    <h3>Removing ramps by adjacency</h3>
+    <table class='basegrid-table' cellspacing='0' cellpadding='0'>
+    <tr>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    </tr>
+    <tr>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    </tr>
+    <tr>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>↑</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>↑</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    </tr>
+    <tr>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>↑</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #94E9AC;'>↑</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    </tr>
+    <tr>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>↑</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    </tr>
+    <tr>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    </tr>
+    <tr>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #79D292;'>↑</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    </tr>
+    <tr>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>↑</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    </tr>
+    <tr>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #AFFFC5;'>↑</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    </tr>
+    <tr>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #5EBC78;'>↑</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    </tr>
+    <tr>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #5EBC78;'>↑</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #79D292;'>↑</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #AFFFC5;'>↑</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    </tr>
+    <tr>
+    <td style='color: #44A65F;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    </tr>
+    <tr>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #AFFFC5;'>↑</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    </tr>
+    <tr>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    </tr>
+    <tr>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #79D292;'>↑</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    </tr>
+    <tr>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #5EBC78;'>■</td>
+    <td style='color: #79D292;'>■</td>
+    <td style='color: #94E9AC;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    <td style='color: #AFFFC5;'>■</td>
+    </tr>
+    </table>
+    </div>
+
+    <div class="left-text-box">
+        <h2>Adding Structures</h2>
+        <p>Once the terrain and ramps are set, I begin adding structures to the map. I scan the entire map looking for squares of various sizes,
+            ranging from 1x1 to 6x6, and mark them as structures. At this stage, I haven't yet decided exactly what these structures will be,
+            but they could include buildings, statues, altars, enemy camps, trees, or objectives.
+            This step basically fills the map with potential points of interest and/or decorations.</p>
+    </div>
+
+    <div class='container'>
+        <table class='basegrid-table' cellspacing='0' cellpadding='0'>
+        <tr>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        </tr>
+        <tr>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>▣</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>▣</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        </tr>
+        <tr>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>↑</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>↑</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>▣</td>
+        <td style='color: #79D292;'>▣</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        </tr>
+        <tr>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>↑</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>▣</td>
+        <td style='color: #79D292;'>▣</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #94E9AC;'>↑</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>▣</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        </tr>
+        <tr>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>↑</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        </tr>
+        <tr>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>▣</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>▣</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>▣</td>
+        <td style='color: #94E9AC;'>■</td>
+        </tr>
+        <tr>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>▣</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #79D292;'>↑</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        </tr>
+        <tr>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>▣</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>↑</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        </tr>
+        <tr>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>▣</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #AFFFC5;'>↑</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        </tr>
+        <tr>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #5EBC78;'>↑</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>▣</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        </tr>
+        <tr>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #5EBC78;'>↑</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #79D292;'>↑</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #AFFFC5;'>↑</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>▣</td>
+        <td style='color: #AFFFC5;'>■</td>
+        </tr>
+        <tr>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>▣</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        </tr>
+        <tr>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>▣</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #AFFFC5;'>↑</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>▣</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        </tr>
+        <tr>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>▣</td>
+        <td style='color: #5EBC78;'>▣</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        </tr>
+        <tr>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>▣</td>
+        <td style='color: #5EBC78;'>▣</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>▣</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>▣</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #79D292;'>↑</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>▣</td>
+        <td style='color: #AFFFC5;'>■</td>
+        </tr>
+        <tr>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        </tr>
+        </table>
+    </div>
+
+    <div class="left-text-box">
+        <h2>Assigning Prefabs</h2>
+        <p>The final step is deciding which prefabs to use for each tile. This part is fairly straightforward: for each tile,
+            I check its surrounding tiles to determine its type (terrain, ramp) and direction. Essentially, this is a large switch statement
+            that ensures the correct prefab and orientation is applied to each tile based on its neighbors.</p>
+    </div>
+
+    <div class='container'>
+        <h3>Prefab Grid</h3>
+        <table class='basegrid-table' cellspacing='0' cellpadding='0'>
+        <tr>
+        <td style='color: #44A65F;'>◢</td>
+        <td style='color: #5EBC78;'>◢</td>
+        <td style='color: #79D292;'>◢</td>
+        <td style='color: #94E9AC;'>◢</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>◣</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #94E9AC;'>◢</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>◣</td>
+        </tr>
+        <tr>
+        <td style='color: #5EBC78;'>◢</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #94E9AC;'>◢</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>◤</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>▣</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>▣</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        </tr>
+        <tr>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #94E9AC;'>▼</td>
+        <td style='color: #94E9AC;'>↓</td>
+        <td style='color: #94E9AC;'>▼</td>
+        <td style='color: #94E9AC;'>→</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>▣</td>
+        <td style='color: #79D292;'>▣</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #94E9AC;'>◥</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        </tr>
+        <tr>
+        <td style='color: #5EBC78;'>▼</td>
+        <td style='color: #5EBC78;'>↓</td>
+        <td style='color: #79D292;'>◥</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>▣</td>
+        <td style='color: #79D292;'>▣</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #94E9AC;'>↓</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>▣</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        </tr>
+        <tr>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #5EBC78;'>▼</td>
+        <td style='color: #5EBC78;'>↓</td>
+        <td style='color: #5EBC78;'>◥</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        </tr>
+        <tr>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #79D292;'>◥</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>▣</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>▣</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>▣</td>
+        <td style='color: #94E9AC;'>■</td>
+        </tr>
+        <tr>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>▣</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #79D292;'>←</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #94E9AC;'>◢</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        </tr>
+        <tr>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>▣</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #79D292;'>◀</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #94E9AC;'>◢</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #AFFFC5;'>◢</td>
+        <td style='color: #AFFFC5;'>◣</td>
+        <td style='color: #AFFFC5;'>↑</td>
+        <td style='color: #AFFFC5;'>◢</td>
+        <td style='color: #AFFFC5;'>◣</td>
+        </tr>
+        <tr>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>▣</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #79D292;'>◥</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #AFFFC5;'>←</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        </tr>
+        <tr>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #5EBC78;'>←</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #79D292;'>◥</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #AFFFC5;'>◀</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>▣</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        </tr>
+        <tr>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #5EBC78;'>←</td>
+        <td style='color: #5EBC78;'>◢</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #79D292;'>←</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #AFFFC5;'>←</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>▣</td>
+        <td style='color: #AFFFC5;'>■</td>
+        </tr>
+        <tr>
+        <td style='color: #44A65F;'>■</td>
+        <td style='color: #5EBC78;'>◢</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>▣</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #79D292;'>◀</td>
+        <td style='color: #94E9AC;'>◥</td>
+        <td style='color: #AFFFC5;'>◀</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        </tr>
+        <tr>
+        <td style='color: #5EBC78;'>◢</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>▣</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #79D292;'>■</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #AFFFC5;'>←</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>▣</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        </tr>
+        <tr>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>▣</td>
+        <td style='color: #5EBC78;'>▣</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #79D292;'>◥</td>
+        <td style='color: #94E9AC;'>■</td>
+        <td style='color: #AFFFC5;'>◢</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        </tr>
+        <tr>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>▣</td>
+        <td style='color: #5EBC78;'>▣</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>▣</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>▣</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #79D292;'>↓</td>
+        <td style='color: #94E9AC;'>◥</td>
+        <td style='color: #AFFFC5;'>◥</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>▣</td>
+        <td style='color: #AFFFC5;'>■</td>
+        </tr>
+        <tr>
+        <td style='color: #5EBC78;'>◥</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #5EBC78;'>■</td>
+        <td style='color: #79D292;'>◥</td>
+        <td style='color: #94E9AC;'>◥</td>
+        <td style='color: #AFFFC5;'>◥</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>■</td>
+        <td style='color: #AFFFC5;'>◤</td>
+        </tr>
+        </table>
+    </div>
+    <div class="left-text-box">
+        <h2>Final thoughts</h2>
+        <p>Working through this method of procedural generation has given me a solid way to create dynamic,
+            navigable 3D terrains in Unity. By starting with Voronoi-based height maps and then carefully placing ramps and structures,
+            I can ensure that each level not only functions well but also looks great. The great thing about this algorithm is that it
+            enables for the creation of really different maps, that are always walkable. So I can simply adjust the parameters to achieve
+            whatever kind of map I want.</p>
+            <p>
+                And that's all for today, I hope you enjoyed the explanation. If you have any question, you can find me on X (former Twitter).
+            </p>
+        </div>
+</body>
+</html>

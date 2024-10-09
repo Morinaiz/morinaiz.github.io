@@ -2,7 +2,8 @@
 .basegrid-table {
     background-color: #3c4558;
     border-radius: 3px;
-    width: auto;
+    width: 320px;
+    height: 320px;
     border-spacing: 1px;
     table-layout:auto
 }

@@ -10,15 +10,14 @@
 
 .basegrid-table td {
     line-height: 0;
-    font-size:36px;
-    max-width: 20px;
-    min-width: 20px;
-    min-height: 20px;
-    max-height: 20px;
+    font-size: 36px;
+    width: 20px;
+    height: 20px;
     background-color: #46526B;
     margin: 0;
     overflow: hidden;
-    text-overflow: clip
+    text-overflow: clip;
+    box-sizing: border-box;
 }
 
 .heightmap-table td {

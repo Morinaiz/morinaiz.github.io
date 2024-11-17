@@ -124,6 +124,12 @@ a:visited {
     flex-basis: calc(100% / 2 - 10px);
 }
 
+#gallery .blog-column {
+    margin: 20px auto;
+    flex-grow: 1;
+    flex-basis: calc(100% / 2 - 10px);
+}
+
 .image-container{
     width: 100%;
 }

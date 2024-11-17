@@ -7,7 +7,7 @@ document.addEventListener("DOMContentLoaded", function () {
     function setupColumn() {
         gallery.innerHTML = '';
         let column = document.createElement("div");
-        column.className = "column";
+        column.className = "blog-column";
         gallery.appendChild(column);
         return column;
     }
@@ -83,11 +83,17 @@ document.addEventListener("DOMContentLoaded", function () {
 function openOverlay(postPath) {
     if (overlayOpen) return;
 
+    let modifiedPostPath = postPath + "?overlay";
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('upwork')) {
+        modifiedPostPath += "&upwork";
+    }
+
     let overlay = document.createElement("div");
     overlay.id = "overlay";
     overlay.innerHTML = `
         <div class="overlay-content">
-            <iframe src="${postPath}" frameborder="0"></iframe>
+            <iframe src="${modifiedPostPath}" frameborder="0"></iframe>
             <button class="close-btn" onclick="closeOverlay()"></button>
         </div>
     `;

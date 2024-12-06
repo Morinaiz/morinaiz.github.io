@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Lorenzo Morini, Italian video game developer - Unicode Procedural Map Log for personal project">
+    <link rel="icon" href="../../data/favicon.png" type="image/png">
+    <link href="https://fonts.cdnfonts.com/css/cascadia-code" rel="stylesheet">
+    <link rel="stylesheet" href="../../style.css">
+    <title>Unicode Procedural Map Log</title>
+</head>
+<body>
+    <header>
+        <h1>Unicode Procedural Map Log</h1>
+        <h2>Personal Project</h2>
+        <section class="light-icon-box">
+            <a id="home-button" href="../../index.html" class="icon" target="_blank" rel="noopener noreferrer"><img src="../../data/home-icon.svg" alt="Home" /></a>
+            <a href="https://www.upwork.com/freelancers/~01067b5eb71db874ad" class="icon" target="_blank" rel="noopener noreferrer"><img src="../../data/upwork-icon.svg" alt="Upwork" /></a>
+            <a href="#" onclick="event.preventDefault()" id="shareButton" class="icon" target="_blank" rel="noopener noreferrer"><img src="../../data/share-icon.svg" alt="Share" /></a>
+            <script src="../../parameters-behaviour.js"></script>    
+        </section>
+    </header>
+        <div class="left-text-box">
+            <h1>Project Overview</h1>
+            <p>
+                While developing my latest game, a roguelike real-time tactics (RTT) where players command platoons of cats,
+                I implemented a Unicode-based log system to streamline debugging for the procedurally generated levels.
+            </p>
+            <p>
+                To maintain transparency in the game's development process, I decided to create a script that
+                automatically generates a detailed Unicode breakdown of the map generation process every time I
+                create a new map inside of Unity.
+            </p>
+            <p>
+                This map log is then uploaded to my website via GitHub Pages, using a secondary account.
+            </p>
+            <p>
+            You can check out the repository for the automated map logs here:
+            <a href="https://lorenzogamedevautomatizedmaplogs.github.io" target="_blank"> lorenzogamedevautomatizedmaplogs.github.io </a>
+            </p>
+            <p>
+            Below, you can see the Unicode Log of the last generated map.
+            As time goes on, logs might change style, and I will add more details and stats.
+            </p>
+        </div>
+        <div class="big-text-box">
+            <style>
+                iframe {
+                    width: 100%;
+                    border: none;
+                    overflow: hidden;
+                }
+            </style>
+            <iframe id="dynamicIframe" src="https://lorenzogamedevautomatizedmaplogs.github.io/" title="Embedded Site"></iframe>
+        </div>
+        <script>
+            const iframe = document.getElementById('dynamicIframe');
+            window.addEventListener('message', (event) => {
+                if (event.origin === 'https://lorenzogamedevautomatizedmaplogs.github.io') {
+                    const { iframeHeight } = event.data;
+                    if (iframeHeight) {
+                        iframe.style.height = iframeHeight + 'px';
+                    }
+                }
+            });
+        </script>
+
+        <div class="left-text-box">
+            <p>
+                If you are interested in procedural generation, you can also check out my blog post about how I managed the creation of these maps: 
+                <a href="https://lorenzomorini.dev/blog/1/post.html" target="_blank">https://lorenzomorini.dev/blog/1/post.html</a>
+            </p>
+            
+        </div>
+
+</body>
+</html>

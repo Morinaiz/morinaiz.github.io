@@ -33,6 +33,7 @@ body {
     text-align: center;
     font-family: 'Cascadia Mono', monospace;
     font-size: medium;
+    overflow-wrap: break-word;
 }
 
 a {

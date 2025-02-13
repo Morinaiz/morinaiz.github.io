@@ -5,7 +5,7 @@ header {
     width:100%;
     text-align: center;
     padding-top: 10px;
-    padding-bottom: 10px;
+    padding-bottom: 30px;
     padding-right: 0px;
     background-color: #3C4558;
     margin-bottom: 15px;
@@ -230,6 +230,23 @@ a:visited {
     min-width: 100px;
     text-align: center;
     box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.15);
+}
+
+.tab-button {
+    text-decoration-line: none;
+    background-color: #FF6B4A; 
+    color: #3C4558 !important;
+    padding: 10px;
+    border-radius: 5px;
+    text-align: center;
+    font-weight: bold;
+    box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.15);
+    transition-duration: 0.3s;
+}
+
+.tab-button:hover{
+    transition-duration: 0.3s;
+    background-color: #E13939;
 }
 
 .button {

@@ -186,6 +186,7 @@
         <p>I wanted smooth transitions, so I introduced an update delay system:</p>
         <ul>
             <li>Cells transition between five states: increasing, decreasing, visible, explored, and not visible.</li>
+            <li>A float value is used to determine the value, for increasing and decreasing cells.</li>
             <li>Updates are spread across multiple frames, making the fog movement fluid.</li>
         </ul>
         <p>For aesthetics, I experimented with different fog colors (indigo, blue, purple, gray, black). Since my game is bright, I settled on a light gray with a slight blue tint.</p>
@@ -198,11 +199,11 @@
         <h2>Conclusion</h2>
         <p>Game-dev is HARD!</p>
         <p>I had many roadblocks during these last 3 weeks. I wasn't sure about which roguelike algorithm I should implement,
-            about how to get the world position using depth and screen position, about how can I make the visuals smooth, while mantaining the algorithm performant.
+            about how to get the world position in a post-process shader, about how can I make the visuals smooth, while mantaining the algorithm performant.
         </p>
         <p>But after all this work, I think I managed to achieve a pretty good result. I will still try to improve it in the next weeks though!</p>
 
-        <p>If you enjoyed the blog post and you want to be updated on my progress, consider following me on X or Twitch! You can find all my links are in my 
+        <p>If you enjoyed the blog post and you want to be updated on my progress, consider following me on X or Twitch! You can find all of my links in my 
             <a href="https://lorenzomorini.dev/blog.html" target="_blank">Home Page</a></p>
         </div>
 </body>

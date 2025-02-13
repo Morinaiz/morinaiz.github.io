@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A deep dive into a 3D fog of war implementation in Unity.">
+    <link rel="icon" href="../../data/favicon.png" type="image/png">
+    <meta property="og:image" content="./cover.webp">
+    <title>3D Fog of War in Unity</title>
+    <link href="https://fonts.cdnfonts.com/css/cascadia-code" rel="stylesheet">
+    <link rel="stylesheet" href="../../style.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>3D Fog of War in Unity</h1>
+        <h2>Shadowcasting, GPU Buffers, and Post-Processing</h2>
+        <section class="light-icon-box">
+            <a id="home-button" href="../../blog.html" class="icon" target="_blank" rel="noopener noreferrer"><img src="../../data/home-icon.svg" alt="Home" /></a>
+            <a href="https://www.upwork.com/freelancers/~01067b5eb71db874ad" class="icon" target="_blank" rel="noopener noreferrer"><img src="../../data/upwork-icon.svg" alt="Upwork" /></a>
+            <a href="#" onclick="event.preventDefault()" id="shareButton" class="icon" target="_blank" rel="noopener noreferrer"><img src="../../data/share-icon.svg" alt="Share" /></a>
+            <script src="../../parameters-behaviour.js"></script>
+        </section>
+        <p class="post-date">2025-02-13</p>
+    </header>
+
+    <div class="left-text-box">
+        <h1>Introduction</h1>
+        <p>Welcome to my blog! If you missed my previous post about procedural level generation,
+            this one picks up right where we left off. I'll talk about how I implemented a fully 3D fog of war system for my game.
+            We'll cover everything from post-process shaders to GPU buffers, shadowcasting, and more.<br>
+            Let's get started!</p>
+    </div>
+
+    <img src="InGameFogOfWar1.png" alt="Age of Empires 2 Fog of War" class="image">
+
+    <div class="left-text-box">
+        <h2>The Environment</h2>
+        <p>The game I'm developing is a Real-Time Tactics (R.T.T.) Roguelike with an isometric perspective, where you command platoons of cats to war.
+            The map is tile-based, with cliffs, bridges, caves, and more.
+            You can also rotate the camera, to see behind cliffs and other obstructions.
+            A standard 2D fog of war just wouldn't cut it, so I needed a 3D solution. The problem is that, as far as I know,
+            no game has ever implemented a fully 3D fog of war system before.</p>
+    </div>
+
+    <div class="left-text-box">
+        <h2>Getting Started</h2>
+        <p>The first step was doing research and studying various approaches. I analyzed various R.T.S. games, and found three main fog of war implementations:</p>
+        <ul>
+            <li><b>Warcraft III</b> – Units have a line of sight, the maps is 2D, but terrain obstructions like cliffs or trees affect visibility.</li>
+            <li><b>Age of Empires II</b> – Units have a line of sight; the map is fully 2D with no obstructions.</li>
+            <li><b>Total War Series</b> – No fog of war; units are visible at all times.</li>
+        </ul>
+        <p>As you can see, there is a clear pattern: The more units a game has, the less accurate its fog of war is.
+            This is probably mainly due to performance constraints. My game has very few units, so I wanted high accuracy.</p>
+    </div>
+
+    <h3>Fog of War in Age of Empires II</h3>
+    <img src="AoE2FogOfWar.png" alt="Age of Empires 2 Fog of War" class="image">
+
+    <div class="left-text-box">
+        <h2>Why 3D?</h2>
+        <p>Warcraft III has a very accurate fog of war. Obstacles such as trees obstruct the view, and the difference of elevation of cliffs
+            allows for above units to see below, while remaining hidden. It's a very good looking implementation.
+            However, the terrain is still stored in a 2D grid, and that doesn't allow for any cave or bridge.
+            Visually it's 3D, but the Fog of War implementation is fully 2D.
+            My game has cliffs, bridges, and caves, so I needed a fully 3D approach.</p>
+    </div>
+
+    <div class="left-text-box">
+        <h2>Implementation</h2>
+        <p>I broke the problem into steps:</p>
+        <ul>
+            <li>The first one was building a visibility map.</li>
+            <li>Every frame, an algorithm reveals nearby tiles for each unit, based on their line of sight.</li>
+            <li>Finally, a post-process shader is needed to hide the map from the player.</li>
+    </ul>
+    </div>
+
+    <div class="left-text-box">
+        <h2>Visibility map</h2>
+        <p>Since my terrain is already stored in a 3D grid, this part was straightforward. Each cell is either:</p>
+        <ul>
+            <li><b>Full</b> – Completely blocks vision</li>
+            <li><b>Empty</b> – Allows vision through</li>
+        </ul>
+        <p>All the data is stored into a 3D bool array, which I populate when the map is generated.</p>
+        <p>
+            If you are interested in procedural generation, you can also check out my blog post about how I handled the creation of these maps: 
+            <a href="https://lorenzomorini.dev/blog/1/post.html" target="_blank">https://lorenzomorini.dev/blog/1/post.html</a>
+        </p>
+    </div>
+
+    <div class="left-text-box">
+        <h2>Line of Sight</h2>
+        <p>I experimented with multiple approaches:</p>
+        <ul>
+            <li><b>Square Visibility</b> – Units reveal everything in a square. It was fast but didn’t handle occlusions. It looked bad too.</li>
+            <li><b>Simple Range-Based Visibility</b> – Units see everything within a cylinder. It looked better and was fast, but it still didn’t handle occlusions.</li>
+            <li><b>Breadth-First Search (BFS)</b> – A BFS expands outward within a fixed range. This was computationally expensive, but gave good results.</li>
+            <li><b>Shadowcasting</b> – A bit more complicated. Collisions are handled, it's not too slow, but only works in 2D.</li>
+        </ul>
+        <p>Each one of these algorithms had their pros and cons, but to better explain the problems of these implementations, here is Sofia.</p>
+    </div>
+
+    <h3>Sofia is a happy cat!</h3>
+    <img src="Sofia.png" alt="Sofia the cat!" class="image">
+
+    <div class="left-text-box">
+        <h2>Square vs Cylinder</h2>
+        <p>The square implementation was the most naive one. It simply revealed all the tiles in a square around the unit.
+            Very easy to implement, useful for debug, but I couldn't use anything like that in game.
+            The cylinder one looked a bit better, but it still didn't handle occlusions.
+        </p>
+    </div>
+    <h3>Square Visibility</h3>
+    <img src="SofiaSquareVision.png" alt="Visibility with a square range" class="image">
+    <h3>Range-Based Visibility</h3>
+    <img src="SofiaCircleVision.png" alt="Visibility with a round range" class="image">
+
+
+    <div class="left-text-box">
+        <h2>Obstructions</h2>
+        <p>While the previous algorithms were extremely fast, they didn't account for occlusions at all.
+            Here you can see the difference between these 2 implementations, and an algorithm that accounts for occlusions.
+        </p>
+    </div>
+    <h3>Range-Based Visibility</h3>
+    <img src="SofiaUnobstructedView.png" alt="Sofia’s view being blocked by terrain" class="image">
+    <h3>Shadowcasting</h3>
+    <img src="SofiaObstructedView.png" alt="Sofia demonstrating horizontal shadowcasting" class="image">
+
+    <div class="left-text-box">
+        <h2>Layers</h2>
+        <p>However, Shadowcasting and other algorithms used in Roguelikes or R.T.S. all use a 2D map.
+            Unlike Warcraft III’s approach, my system needs to support multiple height layers in a true 3D buffer.
+            This means units must be able to see below and above, making bridges, caves, and cliffs possible.</p>
+        <p>Here you can see how Sofia can see both above and below, with a shadowcasting implementation.</p> 
+    </div>
+    <h3>Shadowcasting</h3>
+    
+    <img src="SofiaSingleFloor.png" alt="Unlayered visibility example" class="image">
+    <h3>What I want</h3>
+    <img src="SofiaMultiFloorVisionDownstairs.png" alt="Layered visibility example 1" class="image">
+    <img src="SofiaMultiFloorVisionUpstairs.png" alt="Layered visibility example 2" class="image">
+
+    <div class="left-text-box">
+        <h2>My solution</h2>
+        <p>Out of all the previous solutions, shadowcasting was the closest to what I actually wanted. But it wasn't 3D, so I had to improvise.
+            After a lot or trial and error, I managed to find a solution that was performant (more or less), looked good, and that supported any type of structure.
+        </p>
+        <p>Here's how it works:</p>
+        <ul>
+            <li>Record all units positions and range.</li>
+            <li>Perform shadowcasting to determine visible cells for each unit.</li>
+            <li>Extend visibility vertically, stopping at obstacles or previously visited cells.</li>
+            <li>Add an extra visibility layer horizontally, to smooth edges and avoid visual artifacts.</li>
+        </ul>
+        <p>To better illustrate the algorithm, here’s a step-by-step breakdown.</p>
+    </div>
+    <h3>There is no vision. Sofia's position and range are recorded</h3>
+    <img src="SofiaVisionStep1.png" alt="Step 1 of fog algorithm" class="image">
+    <h3>Vision expands horizontally, with a Shadowcasting algorithm</h3>
+    <img src="SofiaVisionStep2.png" alt="Step 2 of fog algorithm" class="image">
+    <h3>Visible empty cells give visibility above and below, until they meet an obstacle</h3>
+    <img src="SofiaVisionStep3.png" alt="Step 3 of fog algorithm" class="image">
+    <h3>Finally, vision expands to adjacent cells, for a smoother effect</h3>
+    <img src="SofiaVisionStep4.png" alt="Step 4 of fog algorithm" class="image">
+    </div>
+    
+    <div class="left-text-box">
+        <h2>Rendering the Fog of War</h2>
+        <p>Once the visibility algorithm was done, it was time to make a shader.</p>
+        <p>I initially considered applying the effect directly to materials. However, because of the time something like that would take,
+            I ultimately made a post-process shader using Shader Graph:</p>
+        <ul>
+            <li>Depth and screen position are used to reconstruct world position using an Inverse View Matrix.</li>
+            <li>A GPU buffer inside a custom function containins the fog data.</li>
+            <li>Visibility is interpolated using a 2×2×2 cube of nearby values.</li>
+            <li>A fast noise effect is applied for a foggy look, animated vertically over time.</li>
+        </ul>
+    </div>
+
+    <div class="left-text-box">
+        <h2>Final Touches</h2>
+        <p>I wanted smooth transitions, so I introduced an update delay system:</p>
+        <ul>
+            <li>Cells transition between five states: increasing, decreasing, visible, explored, and not visible.</li>
+            <li>Updates are spread across multiple frames, making the fog movement fluid.</li>
+        </ul>
+        <p>For aesthetics, I experimented with different fog colors (indigo, blue, purple, gray, black). Since my game is bright, I settled on a light gray with a slight blue tint.</p>
+    </div>
+
+    <h3>Final result!</h3>
+    <img src="InGameFogOfWar2.png" alt="Step 4 of fog algorithm" class="image">
+
+    <div class="left-text-box">
+        <h2>Conclusion</h2>
+        <p>Game-dev is HARD!</p>
+        <p>I had many roadblocks during these last 3 weeks. I wasn't sure about which roguelike algorithm I should implement,
+            about how to get the world position using depth and screen position, about how can I make the visuals smooth, while mantaining the algorithm performant.
+        </p>
+        <p>But after all this work, I think I managed to achieve a pretty good result. I will still try to improve it in the next weeks though!</p>
+
+        <p>If you enjoyed the blog post and you want to be updated on my progress, consider following me on X or Twitch! You can find all my links are in my 
+            <a href="https://lorenzomorini.dev/blog.html" target="_blank">Home Page</a></p>
+        </div>
+</body>
+</html>

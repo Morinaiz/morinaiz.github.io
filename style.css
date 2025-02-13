@@ -110,7 +110,14 @@ a:visited {
     margin: 6px auto;
     max-width: 60%;
     width: auto;
+    height: auto;
+    object-fit: contain;
+    max-height: 100%;
+    /* Ensure the image does not exceed its natural size */
+    max-width: min(60%, 100%);
+    max-height: min(100%, 100%);
 }
+
 
 #gallery {
     width: 80%;
@@ -243,7 +250,10 @@ a:visited {
 
 .post-container {
     width: 80%;
-    margin: auto;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    margin-left: auto;
+    margin-right: auto;
     text-align: center;
     background-color: #46526B;
     padding: 20px;
@@ -272,11 +282,14 @@ a:visited {
     }
     .text-box,
     .left-text-box,
-    .image,
     .gallery-small,
     .post-container,
     .post-container img {
         width: 90%;
+    }
+    
+    .image img {
+        max-width: 100%;
     }
 }
 
@@ -289,7 +302,7 @@ a:visited {
     .image,
     .gallery-small,
     .post-container {
-        width: 40%;
+        max-width: 40%;
     }
     .post-container img{
         width: 60%;

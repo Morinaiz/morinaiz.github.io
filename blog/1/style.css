@@ -15,7 +15,6 @@
     margin: 0;
     width: 20px;
     height: 20px;
-    font-family: 'Cascadia Mono', monospace;
 }
 
 .heightmap-table td {
@@ -23,5 +22,4 @@
     margin: 0;
     width: 20px;
     height: 20px;
-    font-family: 'Cascadia Mono', monospace;
 }

@@ -108,14 +108,12 @@ a:visited {
 
 .image {
     margin: 6px auto;
-    max-width: 60%;
     width: auto;
     height: auto;
     object-fit: contain;
     max-height: 100%;
-    /* Ensure the image does not exceed its natural size */
     max-width: min(60%, 100%);
-    max-height: min(100%, 100%);
+    max-height: 100%;
 }
 
 
@@ -305,8 +303,8 @@ a:visited {
         width: 90%;
     }
     
-    .image img {
-        max-width: 100%;
+    .image{
+        max-width: 90%;
     }
 }
 

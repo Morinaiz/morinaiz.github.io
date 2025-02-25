@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Improving the look of my Fog of War.">
+    <link rel="icon" href="../../data/favicon.png" type="image/png">
+    <meta property="og:image" content="./cover.webp">
+    <title>Procedural Mesh Generation for Fog of War</title>
+    <link href="https://fonts.cdnfonts.com/css/cascadia-code" rel="stylesheet">
+    <link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+    <header>
+        <h1>Good looking Fog of War</h1>
+        <h2>Procedural mesh generation and shaders</h2>
+        <section class="light-icon-box">
+            <a id="home-button" href="../../blog.html" class="icon" target="_blank" rel="noopener noreferrer"><img src="../../data/home-icon.svg" alt="Home" /></a>
+            <a href="https://www.upwork.com/freelancers/~01067b5eb71db874ad" class="icon" target="_blank" rel="noopener noreferrer"><img src="../../data/upwork-icon.svg" alt="Upwork" /></a>
+            <a href="#" onclick="event.preventDefault()" id="shareButton" class="icon" target="_blank" rel="noopener noreferrer"><img src="../../data/share-icon.svg" alt="Share" /></a>
+            <script src="../../parameters-behaviour.js"></script>
+        </section>
+        <p class="post-date">2025-02-25</p>
+    </header>
+
+    <div class="left-text-box">
+        <h1>Introduction</h1>
+        <p>This is my second blog post about my 3D fog of war implementation. While not strictly necessary, reading the previous blog post will help you understand the context: <br>
+            <a href="https://lorenzomorini.dev/blog/2/post.html" target="_blank">Blog Post</a></p>
+            
+        <p>Anyway, let's get started!</p>
+    </div>
+
+    <h3>Right where we left off!</h3>
+    <img src="InGameFogOfWarOld.png" alt="Age of Empires 2 Fog of War" class="image">
+
+    <div class="left-text-box">
+        <h2>The Problem</h2>
+        <p>After all the work to implement my previous solution, I still wasn't completely satisfied with the effect.<br>
+            Everything worked: it supported multiple units with various lines of sight, it was truly 3D, and it was optimized.
+            All the boxes were checked!</p>
+        <p>However, every time I asked people to try it, I couldn't help but notice how dark it was.<br>
+            It's common for R.T.S. games to feature a darker fog of war, and sometimes a dust effect is applied to increase brightness.<br>
+            But that type of fog just didn't fit the tone of my game. I needed something more cartoonish, so I got back to the drawing board.</p>
+        <p>
+            While looking for inspiration, I remembered playing a very cute R.T.S. for mobile called "The Battle of Polytopia".<br>
+            Being tile-based, it featured a fog of war system where each unexplored tile had a "cloud" overlay that hid it completely.<br>
+            The effect was quite simple, just a sprite for the cell and one for the disappearance effect, but it looked very nice.<br>
+            So I thought, why not do something similar?
+        </p>
+    </div>
+
+    <h3>Fog of War in Polytopia</h3>
+    <img src="PolytopiaFogOfWar.png" alt="Fog of War in The Battle of Polytopia" class="image">
+
+    <div class="left-text-box">
+        <h2>But how?</h2>
+        <p>Polytopia had the advantage of being completely 2D, which meant I couldn't just do the same.<br>
+            I thought about spawning a single mesh for each cell, but since my game is tile-based, that would have
+            meant either having most sides of the mesh unseen (which would not be good for performance)
+            or creating a new fog tile for each type of tile in my game (and trust me, there are a lot of tiles).<br>
+            But then I thought, why not generate it procedurally?
+        </p>
+    </div>
+
+    <div class="left-text-box">
+        <h2>How a Mesh is made</h2>
+        <p>
+            I had never really used Unity's tools to generate meshes before, so this was quite the learning experience.<br>
+            I won't bore you with all the details of how I got there, as it involved a lot of trial and error, but in the end,
+            I managed to write a seven-step algorithm that can suit any shape of any type of map:
+            <ul>
+                <li>Generate the data for each face</li>
+                <li>Track the connectivity for each vertex</li>
+                <li>Merge the duplicated vertices</li>
+                <li>Assign offset to closest inner position to Vertex Colors</li>
+                <li>Subdivide the triangles of the mesh</li>
+                <li>Smooth the mesh</li>
+                <li>Split the mesh into submeshes</li>
+            </ul>
+            After all of these passages, a shader will be applied, to modify the vertex position for the vertices, in order to create a smooth effect.<br>
+            But let's go in order:
+        </p>
+    </div>
+
+    <div class="left-text-box">
+        <h2>Generating Face data</h2>
+        <p>
+            Every solid tile in the 3D grid is examined alongside its neighboring positions.<br>
+            Whenever there's no adjacent solid tile, a face is generated. In other words, only the “outer surfaces” are turned into geometry.<br>
+            This ensures that the final shape corresponds to the exposed boundaries of the solid cells in the grid.<br>
+            Each face is made by two triangles, whose winding order is determined as to have the normal facing outside.<br>
+            It also creates a dictionary, mapping each vertex to a list with a single element: the cell that spawned it.<br>
+            As the faces of each tile are connected, multiple vertices will be created in the same position.
+        </p>
+    </div>
+
+    <h3>Each color represents a different number of vertices</h3>
+    <img src="VerticesPerFace.png" alt="Vertices per each face" class="image">
+
+    <div class="left-text-box">
+        <h2>Tracking connectivity</h2>
+        <p>
+            Each created vertex is checked against nearby cells, to determine which parts of the grid it's tied to.<br>
+            The system uses a small breadth-first search (B.F.S.) on the tiles in a 2x2x2 area around each vertex, from the starting cell we saved earlier, <br>
+            to capture a unique "fingerprint" of grid cells for each vertex.<br>
+            This data later prevents vertices at the same point in space from being accidentally merged, in case they belong to different parts of the grid.
+        </p>
+    </div>
+
+    <h3>The red point indicates 2 vertices that won't be merged</h3>
+    <img src="ConnectivityMap.png" alt="Vertices per each face" class="image">
+
+    <div class="left-text-box">
+        <h2>Merging the duplicates</h2>
+        <p>
+            First, the algorithm sorts vertices by their position and connectivity fingerprint.<br>
+            All vertices sharing the same position and the same set of connected cells are collapsed into one.<br>
+            Triangles that pointed to the old duplicates are updated to point to the merged vertex, cleaning up the mesh geometry and reducing redundancy.
+        </p>
+    </div>
+
+    <div class="left-text-box">
+        <h2>Assigning Vertex Colors as Inner-Position</h2>
+        <p>
+            Instead of using typical colors, these "colors" store a small offset vector, which represents the difference between the vertex and inner position it points to.<br>
+            The inner position is calculated by taking the average of the modes of the centers of each cell from the previous B.F.S., separately for each axis.<br>
+            Red represents X, Green Y, and Blue is Z.<br>
+            This extra information will become crucial for the shaders, as it indicates where the mesh retracts to, when the tile is explored.
+        </p>
+    </div>
+
+    <h3>Absolute Values of Vertex Colors visualized</h3>
+    <img src="VertexColors.png" alt="Vertex Colors visualized" class="image">
+
+    <div class="left-text-box">
+        <h2>Subdividing the Mesh</h2>
+        <p>
+            Each triangle is then split into four smaller ones, by calculating the midpoints on each edge.<br>
+            Normals and color values are blended at the midpoints.<br>
+            With smaller triangles, the mesh gains enough detail to be smoothed in the next stage.<br>
+            It will also come in handy for the shaders.
+        </p>
+    </div>
+
+    <h3>Before and After subdividing</h3>
+    <img src="SubdividedMesh.png" alt="Subdividing the mesh" class="image">
+
+    <div class="left-text-box">
+        <h2>Smoothing the Vertices</h2>
+        <p>
+            The smoothing process applies a Laplacian smoothing to each vertex, moving it towards the average of its neighboring vertices.<br>
+            Once the positions are adjusted, the previously stored color offsets are recalculated as to point to the same position as before.<br>
+            The end result is a softer, more organic-looking geometry.
+        </p>
+    </div>
+
+    <h3>Smoothed Mesh</h3>
+    <img src="SmoothMesh.png" alt="Smoothed mesh" class="image">
+
+    <div class="left-text-box">
+        <h2>Splitting</h2>
+        <p>
+            If the resulting mesh is too large (i.e., has more vertices than allowed), it's split into several smaller sections.<br>
+            Otherwise, the mesh data (vertices, faces, normals, and vertex colors) is used to generate the mesh.<br>
+            This step ensures compatibility with Unity's limitation of 65535 vertices with a 16 bit index format.<br>
+            It also helps with the culling of the parts of the mesh which are not currently on screen.
+        </p> 
+    </div>
+
+    <h3>A map with two submeshes</h3>
+    <img src="Submeshes.png" alt="Map with two submeshes" class="image">
+
+    <div class="left-text-box">
+        <h2>Shaders!</h2>
+        <p>
+            So now I have a mesh, in the shape of the map.<br>
+            What I can do now, is read my GPU Buffer, which keeps the data for the current visibility of each tile, to interpolate the position of each vertex.<br>
+            When the tile is unexplored, the vertex position has an offset based on a noise, to simulate the fog/cloud effect.<br>
+            When the tile is explored, it quickly hides inside the tile.<br>
+            A Post Process shader also applies the same colors of the mesh (a white tint) to all the unexplored tiles.<br>
+            This way, if there is for example a tree sticking out from the mesh, it will still be barely visible, and won't ruin the visuals.<br>
+        </p> 
+    </div>
+    
+    <h3>Final result!</h3>
+    <img src="FogOfWarAnimated.png" alt="Smoothed mesh" class="image">
+
+    <div class="left-text-box">
+        <h2>Conclusion</h2>
+        <p>
+            There are still a few points I could improve: the post-process shader could have a different pattern, more colors, it could smooth the effect in a different way.<br>
+            The cloud shader could also change, the wiggle effect is still not perfect, and it can surely be improved.<br>
+            But overall, I'm almost completely satisfied with it!<br>
+            If I make more big changes, I will make sure to write another blog post, so stay tuned!<br>
+            
+        </p> 
+        <p>
+            If you liked the post, don't forget to follow me on X or Twitch! You can find all of my links in my 
+            <a href="https://lorenzomorini.dev/blog.html" target="_blank">Home Page</a>
+        </p>
+    </div>
+</body>
+</html>

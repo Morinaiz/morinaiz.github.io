@@ -79,7 +79,9 @@
                 <li>Split the mesh into submeshes</li>
             </ul>
             After all of these passages, a shader will be applied, to modify the vertex position for the vertices, in order to create a smooth effect.<br>
-            But let's go in order:
+            I will explain all the passages, why they are necessary, and what I will do with the mesh once it's generated,
+            everything will be clear by the end, so stick with me!<br>
+            Let's go in order:
         </p>
     </div>
 
@@ -172,19 +174,37 @@
     <img src="Submeshes.png" alt="Map with two submeshes" class="image">
 
     <div class="left-text-box">
-        <h2>Shaders!</h2>
+        <h2>What now?</h2>
         <p>
             So now I have a mesh, in the shape of the map.<br>
+            Without any shader applied, the generated mesh will intersect with the ground, being sometimes above and sometimes below.<br>
+            This is because of the smoothing effect.<br>
+            What I want to do, is to apply a shader, which uses the vertex colors to interpolate between two positions:<br>
+            one for when the tile is unexplored, and one for when the tile is unexplored.
+            When the tile is unexplored, the mesh will stick out, covering the ground (and the enemy units), making it impossible to see any detail.<br>
+            Once the tile gets explored, the vertices move underground, hiding from the view of the player. The mesh is still there, but it's not visible anymore.
+        </p> 
+    </div>
+
+    <h3>Mesh without any shader</h3>
+    <img src="FogOfWarMeshNoShaders.png" alt="Mesh without any shader" class="image">
+
+    <h3>How the shader moves the vertices</h3>
+    <img src="FogOfWarMeshExtrusion.webp" alt="Animation of the extrusion" class="image">
+
+    <div class="left-text-box">
+        <h2>Post Process</h2>
+        <p>
             What I can do now, is read my GPU Buffer, which keeps the data for the current visibility of each tile, to interpolate the position of each vertex.<br>
-            When the tile is unexplored, the vertex position has an offset based on a noise, to simulate the fog/cloud effect.<br>
-            When the tile is explored, it quickly hides inside the tile.<br>
-            A Post Process shader also applies the same colors of the mesh (a white tint) to all the unexplored tiles.<br>
-            This way, if there is for example a tree sticking out from the mesh, it will still be barely visible, and won't ruin the visuals.<br>
+            This way, I can interpolate between the two states smoothly, once the map gets explored.<br>
+            The intersection between the mesh and the ground is then hidden by a Post Process shader, 
+            which also applies the same colors of the mesh (a white tint) to all the unexplored tiles.<br>
+            This way, if there is a structure of some kind, or a tree, sticking out from the mesh, it will still be barely visible, and won't ruin the visuals.<br>
         </p> 
     </div>
     
     <h3>Final result!</h3>
-    <img src="FogOfWarAnimated.png" alt="Smoothed mesh" class="image">
+    <img src="FogOfWarAnimated.png" alt="Fog Of War Animated" class="image">
 
     <div class="left-text-box">
         <h2>Conclusion</h2>
@@ -193,7 +213,6 @@
             The cloud shader could also change, the wiggle effect is still not perfect, and it can surely be improved.<br>
             But overall, I'm almost completely satisfied with it!<br>
             If I make more big changes, I will make sure to write another blog post, so stay tuned!<br>
-            
         </p> 
         <p>
             If you liked the post, don't forget to follow me on X or Twitch! You can find all of my links in my 

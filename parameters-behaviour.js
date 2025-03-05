@@ -12,6 +12,7 @@ document.addEventListener("DOMContentLoaded", function() {
     function appendUpworkParam(link) {
         if (link && urlParams.has(upworkParam)) {
             const currentHref = link.getAttribute('href');
+            // If the href doesn't already contain the parameter, append it manually
             if (!currentHref.includes(upworkParam)) {
                 const separator = currentHref.includes('?') ? '&' : '?';
                 link.setAttribute('href', `${currentHref}${separator}${upworkParam}`);
@@ -40,11 +41,17 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
+    // Process all same-origin links: append ?upwork (or &upwork) if needed.
     if (urlParams.has(upworkParam)) {
         document.querySelectorAll("a").forEach(link => {
             const url = new URL(link.href, window.location.origin);
-            if (url.origin === window.location.origin && !url.searchParams.has(upworkParam)) {
-                url.searchParams.append(upworkParam, "");
+            // Use a regex to check if "upwork" is already present in the query string
+            if (url.origin === window.location.origin && !/(?:\?|&)upwork(?:&|$)/.test(url.search)) {
+                if (url.search) {
+                    url.search = url.search + '&' + upworkParam;
+                } else {
+                    url.search = '?' + upworkParam;
+                }
                 link.href = url.toString();
             }
         });
@@ -67,11 +74,18 @@ function sharePage() {
 function openModifiedLink() {
     let url = new URL(window.location.href);
     url.searchParams.delete('overlay');
-
-    if (url.searchParams.has("upwork")) {
-        url.searchParams.delete("upwork");
-        let newUrl = url.origin + url.pathname + (url.search ? '?' + url.searchParams.toString() : '') + `?upwork`;
-        window.open(newUrl, '_blank');
+    const upworkParam = "upwork";
+    // Use URLSearchParams to remove overlay but not upwork,
+    // then check if the original search string contained "upwork" manually.
+    let params = new URLSearchParams(url.search);
+    if (/(?:\?|&)upwork(?:&|$)/.test(url.search)) {
+        let searchString = params.toString();
+        if (searchString) {
+            url.search = '?' + searchString + '&' + upworkParam;
+        } else {
+            url.search = '?' + upworkParam;
+        }
+        window.open(url.toString(), '_blank');
     } else {
         window.open(url.toString(), '_blank');
     }

@@ -3,69 +3,51 @@ document.addEventListener("DOMContentLoaded", function() {
     const homeButton = document.getElementById('home-button');
     const blogLink = document.getElementById('blogLink');
     const portfolioLink = document.getElementById('portfolioLink');
-    if (urlParams.has('overlay')) {
-        if (homeButton) homeButton.style.display = 'none';
+    const upworkParam = "upwork";
+
+    if (urlParams.has('overlay') && homeButton) {
+        homeButton.style.display = 'none';
     }
-    if (homeButton && urlParams.has('upwork')) {
-        const currentHref = homeButton.getAttribute('href');
-        const upworkParam = 'upwork';
-        if (!currentHref.includes(upworkParam)) {
-            const separator = currentHref.includes('?') ? '&' : '?';
-            homeButton.setAttribute('href', `${currentHref}${separator}${upworkParam}`);
-        }
-    }
-    
-    if (blogLink && urlParams.has('upwork')) {
-        const currentHref = blogLink.getAttribute('href');
-        const upworkParam = 'upwork';
-        if (!currentHref.includes(upworkParam)) {
-            const separator = currentHref.includes('?') ? '&' : '?';
-            blogLink.setAttribute('href', `${currentHref}${separator}${upworkParam}`);
-        }
-    }
-    
-    if (portfolioLink && urlParams.has('upwork')) {
-        const currentHref = portfolioLink.getAttribute('href');
-        const upworkParam = 'upwork';
-        if (!currentHref.includes(upworkParam)) {
-            const separator = currentHref.includes('?') ? '&' : '?';
-            portfolioLink.setAttribute('href', `${currentHref}${separator}${upworkParam}`);
+
+    function appendUpworkParam(link) {
+        if (link && urlParams.has(upworkParam)) {
+            const currentHref = link.getAttribute('href');
+            if (!currentHref.includes(upworkParam)) {
+                const separator = currentHref.includes('?') ? '&' : '?';
+                link.setAttribute('href', `${currentHref}${separator}${upworkParam}`);
+            }
         }
     }
 
-    if (!urlParams.has('upwork')) {
+    appendUpworkParam(homeButton);
+    appendUpworkParam(blogLink);
+    appendUpworkParam(portfolioLink);
+
+    if (!urlParams.has(upworkParam)) {
         document.querySelectorAll('.social-icon').forEach(element => {
             element.style.display = 'inline-flex';
         });
     }
+
     const shareButton = document.getElementById('shareButton');
     if (shareButton) {
-        shareButton.addEventListener('click', function() {
-            sharePage();
+        shareButton.addEventListener('click', sharePage);
+        shareButton.addEventListener('auxclick', function(event) {
+            if (event.button === 1) {
+                event.preventDefault();
+                openModifiedLink();
+            }
         });
     }
-});
 
-document.getElementById('shareButton').addEventListener('auxclick', function(event) {
-    if (event.button === 1) {
-        event.preventDefault();
-
-        let url = new URL(window.location.href);
-        url.searchParams.delete('overlay');
-
-        if (url.searchParams.has('upwork')) {
-            url.searchParams.delete('upwork');
-            let newUrl = url.href.split('?')[0];
-            let params = Array.from(url.searchParams.entries()).map(entry => entry[0] + (entry[1] ? '=' + entry[1] : '')).join('&');
-            if (params) {
-                newUrl += '?' + params + '&upwork';
-            } else {
-                newUrl += '?upwork';
+    if (urlParams.has(upworkParam)) {
+        document.querySelectorAll("a").forEach(link => {
+            const url = new URL(link.href, window.location.origin);
+            if (url.origin === window.location.origin && !url.searchParams.has(upworkParam)) {
+                url.searchParams.append(upworkParam, "");
+                link.href = url.toString();
             }
-            window.open(newUrl, '_blank');
-        } else {
-            window.open(url.toString(), '_blank');
-        }
+        });
     }
 });
 
@@ -76,12 +58,22 @@ function sharePage() {
         navigator.share({
             title: document.title,
             url: decodeURIComponent(encodedUrl)
-        }).then(() => {
-            console.log('Thanks for sharing!');
-        })
-        .catch(console.error);
+        }).catch(console.error);
     } else {
         copyTextToClipboard(decodeURIComponent(encodedUrl));
+    }
+}
+
+function openModifiedLink() {
+    let url = new URL(window.location.href);
+    url.searchParams.delete('overlay');
+
+    if (url.searchParams.has("upwork")) {
+        url.searchParams.delete("upwork");
+        let newUrl = url.origin + url.pathname + (url.search ? '?' + url.searchParams.toString() : '') + `?upwork`;
+        window.open(newUrl, '_blank');
+    } else {
+        window.open(url.toString(), '_blank');
     }
 }
 
@@ -89,63 +81,28 @@ function removeOverlayParamFromURL(url) {
     const urlObj = new URL(url);
     const params = new URLSearchParams(urlObj.search);
     params.delete('overlay');
-
-    let queryString = '';
-    for (const [key, value] of params.entries()) {
-        queryString += `${queryString ? '&' : ''}${encodeURIComponent(key)}${value ? '=' + encodeURIComponent(value) : ''}`;
-    }
-
-    return `${urlObj.origin}${urlObj.pathname}${queryString ? '?' + queryString : ''}${urlObj.hash}`;
+    return urlObj.origin + urlObj.pathname + (params.toString() ? '?' + params.toString() : '') + urlObj.hash;
 }
 
 function copyTextToClipboard(text) {
     navigator.clipboard.writeText(text)
-    .then(() => {
-        console.log('Text successfully copied to clipboard');
-        showMessage("Copied to clipboard!");
-    })
-    .catch(err => {
-        console.error('Failed to copy text to clipboard', err);
-        showMessage("Failed to copy!");
-    });
+    .then(() => showMessage("Copied to clipboard!"))
+    .catch(() => showMessage("Failed to copy!"));
 }
+
 let currentMessageDiv = null;
-let hideTimeout = null;
-let removeTimeout = null;
 
 function showMessage(message) {
-    if (hideTimeout) {
-        clearTimeout(hideTimeout);
-        hideTimeout = null;
-    }
+    if (currentMessageDiv) currentMessageDiv.remove();
 
-    if (removeTimeout) {
-        clearTimeout(removeTimeout);
-        removeTimeout = null;
-    }
-
-    if (!currentMessageDiv) {
-        currentMessageDiv = document.createElement('div');
-        currentMessageDiv.className = 'message';
-        currentMessageDiv.style.opacity = '0';
-        currentMessageDiv.style.visibility = 'hidden';
-        document.body.appendChild(currentMessageDiv);
-    }
-
+    currentMessageDiv = document.createElement('div');
+    currentMessageDiv.className = 'message';
     currentMessageDiv.textContent = message;
+    document.body.appendChild(currentMessageDiv);
 
-    currentMessageDiv.style.visibility = 'visible';
-    currentMessageDiv.style.opacity = '1';
-
-    hideTimeout = setTimeout(() => {
-        currentMessageDiv.style.opacity = '0';
-
-        removeTimeout = setTimeout(() => {
-            if (currentMessageDiv) {
-                currentMessageDiv.remove();
-                currentMessageDiv = null;
-            }
-        }, 300);
+    setTimeout(() => {
+        currentMessageDiv.remove();
+        currentMessageDiv = null;
     }, 2000);
 }
 

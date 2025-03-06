@@ -1,5 +1,6 @@
 .heightmap-table,
 .basegrid-table {
+    font-family: 'Cascadia Mono', monospace;
     background-color: #3c4558;
     border-radius: 3px;
     width: 337px;

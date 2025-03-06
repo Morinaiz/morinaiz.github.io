@@ -10,15 +10,26 @@ header {
     background-color: #3C4558;
     margin-bottom: 15px;
     color: #F4F8FF;
-    font-family: 'Cascadia Mono', monospace;
+    font-family: 'Inter', sans-serif;
     font-size: large;
 }
 
 h1, h2, h3, h4, h5, h6 {
-    font-family: 'Cascadia Mono', monospace;
+    font-family: 'Inter', sans-serif;
+}
+
+h2 {
+    color: #71C4E8;
+}
+
+
+strong {
+    color: #dd3b4b;
+    font-weight: 900;
 }
 
 header h2 {
+    color: #D1D5DB;
     margin-top: 0;
 }
 
@@ -31,7 +42,7 @@ body {
     margin: 0;
     padding: 0;
     text-align: center;
-    font-family: 'Cascadia Mono', monospace;
+    font-family: 'Inter', sans-serif;
     font-size: medium;
     overflow-wrap: break-word;
 }
@@ -39,10 +50,21 @@ body {
 a {
     color: #71C4E8;
     text-decoration: none;
+    transition-duration: 0.3s;
 }
 
 a:visited {
     color: #D693ED;
+}
+
+
+a:visited:hover {
+    color: #e0abf1;
+}
+
+a:hover {
+    color: #8adafc;
+    transition-duration: 0.3s;
 }
 
 .icon-box,
@@ -96,6 +118,12 @@ a:visited {
     background-color: #46526B;
     color: #F4F8FF;
     border-radius: 10px;
+}
+
+.text-box h3,
+.left-text-box h3,
+.big-text-box h3 {
+    color: #ebcb8b;
 }
 
 .left-text-box {

@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Efficient data management for the units in my RTS">
+    <link rel="icon" href="../../data/favicon.png" type="image/png">
+    <meta property="og:image" content="./cover.webp">
+    <title>Implementation of Unit Data in a Cat-Themed RTS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700" rel="stylesheet">
+    <link href="https://fonts.cdnfonts.com/css/cascadia-mono" rel="stylesheet">
+    <link rel="stylesheet" href="../../style.css">
+    <link rel="stylesheet" href="../../style-code.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+</head>
+<body>
+    <header>
+        <h1>Implementation of Unit Data</h1>
+        <h2>Behind the Scenes of a Cat-Themed RTS</h2>
+        <section class="light-icon-box">
+            <a id="home-button" href="../../blog.html" class="icon" target="_blank" rel="noopener noreferrer">
+                <img src="../../data/home-icon.svg" alt="Home" />
+            </a>
+            <a href="https://www.upwork.com/freelancers/~01067b5eb71db874ad" class="icon" target="_blank" rel="noopener noreferrer">
+                <img src="../../data/upwork-icon.svg" alt="Upwork" />
+            </a>
+            <a href="#" onclick="event.preventDefault()" id="shareButton" class="icon" target="_blank" rel="noopener noreferrer">
+                <img src="../../data/share-icon.svg" alt="Share" />
+            </a>
+            <script src="../../parameters-behaviour.js"></script>
+        </section>
+        <p class="post-date">2025-03-06</p>
+    </header>
+
+    <div class="left-text-box">
+        <h2>Introduction</h2>
+        <p>
+            Hi! In this blog post I'll talk about how I implemented the data for the various units in my RTS with cats!<br>
+            I will explain the problems I encountered, which solution I found, and why I believe it's a great solution for my usecase.
+            Let's get started!
+        </p>
+    </div>
+
+    <img src="cover.webp" alt="Unit data" class="image">
+  
+    <div class="left-text-box">
+      <h2>The Challenge</h2>
+      <p>
+          During the earliest stages of the development, I had to design a system to handle the data of the units.<br>
+          After researching other games, I found two approaches to be the most commonly used:
+      </p>
+      <h3>The Mega Class</h3>
+      <p>
+          A single class with every possible data type, for all possible variables. 
+          The pro is that it is extremely easy to implement, and is very nice for an eventual 
+          multiplayer addition. 
+          The con is that it leads to wasted space for unused data, making it impossible 
+          to catch extra parameters until runtime. <br>
+          Debugging is much more complicated, and since I'm the only developer on the project 
+          I wanted to simplify my life as much as possible.
+      </p>
+      <h3>Unique Classes</h3>
+      <p>
+          Using individual variables for each unit type (for instance, projectile velocity 
+          for Archers and helmet armor for Axecats) means manually configuring every prefab, or making a custom ScriptableObject for each unit. 
+          Customization is absolute, but this approach makes it hard to compare similar functionalities 
+          across units, as there is no easy way to understand when two variables have the same purpose.
+      </p>
+      <p>
+          While neither of the approaches is bad, I wanted a solution that allows easy addition or 
+          removal of standardized data parameters, without wasting memory or complicating the debugging.
+      </p>
+  </div>
+
+  <h3>An example of the Mega Class</h3>
+  <img src="WarcraftIIIUnitData.png" alt="Unit data in Warcraft III" class="image">
+
+  <div class="left-text-box">
+      <h2>My Solution</h2>
+      <p>
+          I developed a system centered on the 
+          <strong>ScriptableObject</strong> class. 
+          My class, <strong>UnitData</strong>, holds a list of 
+          <strong>UnitAttribute</strong> structures. 
+          Each attribute has two variables:
+      </p>
+      <ul>
+          <li>
+              <strong>dataType</strong>: An enum representing the kind of data 
+              (e.g., MaxHealth or MeleeAttackDamage).
+          </li>
+          <li>
+              <strong>value</strong>: The actual data stored as an object.
+          </li>
+      </ul>
+      <p>
+          Each value is mapped to its expected C# type (int, float, or bool) 
+          using a dictionary. 
+          This design means that each object only contains the attributes the unit uses, 
+          keeping the data both compact and manageable.
+      </p>
+      <p>
+          On the Awake script, the unit loops over all the attributes, assigning them 
+          to the correct variable. 
+          This allows for standardized data (the types are always the same for each unit).
+      </p>
+  </div>
+
+  <div class="left-text-box">
+      <h2>Mapping Data Types</h2>
+      <p>
+          Ensuring that each attribute's value is of the correct type was essential. 
+          To solve this, I created a dictionary named <strong>dataTypeMap</strong> that maps 
+          each enum value to its expected type. 
+          This mapping is checked during serialization and at runtime. 
+          If a mismatch occurs, the system defaults to a new instance using 
+          <strong>Activator.CreateInstance(typeValue)</strong>, 
+          preventing subtle bugs that could otherwise lead to endless debugging. 
+          There are also safeguards in place to prevent data corruption when the data is missing.
+      </p>
+    <pre><code class="language-csharp">public static readonly Dictionary<DataType, Type> dataTypeMap = new()
+{
+    { MaxHealth, typeof(int) },
+    { LineOfSight, typeof(int) },
+    { MeleeAttackDamage, typeof(int) },
+    { MeleeAttackCooldown, typeof(float) },
+    { MeleeAttackCooldownMultiplier, typeof(float) },
+    { MeleeAttackKnockback, typeof(float) },
+    { MeleeAttackMaxTargets, typeof(int) },
+    { RangedAttackDamage, typeof(int) },
+    { RangedAttackCooldown, typeof(float) },
+    { RangedAttackCooldownMultiplier, typeof(float) },
+    { RangedAttackKnockback, typeof(float) },
+    { RangedAttackMaxTargets, typeof(int) },
+    { RangedAttackSpread, typeof(float) },
+    { ProjectileVelocity, typeof(float) },
+    { ProjectileLifetime, typeof(float) },
+    { HelmetArmor, typeof(float) },
+    { ShieldArmor, typeof(float) }
+};</code></pre>
+        </div>
+
+
+  <div class="left-text-box">
+      <h2>Custom Serialization</h2>
+      <p>
+          Unity's built-in serialization does not support mixed data types in a single list. 
+          I overcame this by implementing the <code>ISerializationCallbackReceiver</code> interface, 
+          which allows you to run a custom method during serialization and deserialization:
+      </p>
+      <h3>OnBeforeSerialize</h3>
+      <p>
+          Before Unity serializes the object, I split the data attributes into separate lists for 
+          ints, floats, and bools. 
+          I also create parallel lists that record each data type as a string, for a total of 6 lists. 
+          Sorting the data first ensures consistency, and these lists help manage element removal. 
+          This is necessary, as I want to be able to change the order of the elements in the enum any time I want.
+      </p>
+
+
+<pre><code class="language-csharp">public void OnBeforeSerialize()
+{
+    intStringTypes.Clear();
+    floatStringTypes.Clear();
+    boolStringTypes.Clear();
+    intData.Clear();
+    floatData.Clear();
+    boolData.Clear();
+
+    OrderData();
+
+    foreach (UnitAttribute attribute in data)
+    {
+        if (dataTypeMap.TryGetValue(attribute.dataType, out Type typeValue)
+            && attribute.value != null)
+        {
+            object newValue = attribute.value.GetType() == typeValue ?
+                attribute.value : Activator.CreateInstance(typeValue);
+            switch (typeValue)
+            {
+                case Type type when type == typeof(bool):
+                    boolData.Add((bool)newValue);
+                    boolStringTypes.Add(attribute.dataType.ToString());
+                    break;
+                case Type type when type == typeof(int):
+                    intData.Add((int)newValue);
+                    intStringTypes.Add(attribute.dataType.ToString());
+                    break;
+                case Type type when type == typeof(float):
+                    floatData.Add((float)newValue);
+                    floatStringTypes.Add(attribute.dataType.ToString());
+                    break;
+                default:
+                    Debug.LogError("Data type not implemented, can't serialize");
+                    break;
+            }
+        }
+    }
+}
+</code></pre>
+
+      <h3>OnAfterDeserialize</h3>
+      <p>
+          After deserialization, I reconstruct the original list of attributes by reading from the 
+          sorted lists. 
+          I check that each value's type matches the expected type from the mapping dictionary. 
+          If not, I log a warning or error and assign a default value. 
+          This two-step process makes the data robust and flexible, allowing changes over time without breaking older data.
+      </p>
+      <p>
+          Below is the deserialization code:
+      </p>
+<pre><code class="language-csharp">private List&lt;UnitAttribute&gt; DeserializeList(List&lt;string&gt; serializedTypeStrings, 
+                                                IList&lt;object&gt; serializedValues)
+{
+    List&lt;UnitAttribute&gt; unserializedAttributes = new();
+    int dataIndex = 0;
+    Type expectedType = serializedValues.Count > 0 ? 
+                        serializedValues[0]?.GetType() : null;
+
+    if (expectedType == null)
+        return unserializedAttributes;
+
+    for (int i = 0; i < serializedTypeStrings.Count; i++)
+    {
+        if (!Enum.TryParse(serializedTypeStrings[i], out DataType serializedType))
+        {
+            Debug.LogWarning($"Data {serializedTypeStrings[i]} couldn't be parsed. " +
+                              "An enum value has changed. " +
+                              "This might or might not be intentional. " +
+                              "No data will be added. " +
+                              "To recover the lost data, " +
+                              "please rollback to a previous version.");
+            dataIndex++;
+            continue;
+        }
+
+        if (!dataTypeMap.TryGetValue(serializedType, out Type typeValue))
+        {
+            Debug.LogError($"Type {serializedType} has a missing mapping. " +
+                            "Data will be lost. " +
+                            "Please add a mapping in the dictionary. " +
+                            "To recover the lost data, " +
+                            "please rollback to a previous version.");
+            dataIndex++;
+            continue;
+        }
+
+        UnitAttribute newAttribute = new() { dataType = serializedType };
+
+        if (typeValue != expectedType)
+        {
+            Debug.LogWarning($"Type of {serializedType} was changed " +
+                             $"from {expectedType} to {typeValue}. " +
+                              "This might or might not be intentional. " +
+                              "A default value will be assigned.");
+            newAttribute.value = typeValue.IsValueType ? 
+                                Activator.CreateInstance(typeValue) : null;
+        }
+        else
+        {
+            newAttribute.value = serializedValues[dataIndex];
+        }
+
+        dataIndex++;
+        unserializedAttributes.Add(newAttribute);
+    }
+
+    return unserializedAttributes;
+}
+</code></pre>
+        
+  </div>
+
+  <div class="left-text-box">
+      <h2>Custom Editor for Ease of Use</h2>
+      <p>
+          Even with this solution, if the data is cumbersome to work with in the Unity Editor, it's going to be a problem. 
+          So I implemented a custom editor for the Unit Data Scriptable Object, to make managing unit attributes as painless as possible.<br>
+          Here are the key points:
+      </p>
+      <ul>
+          <li>
+              <strong>Intuitive Display</strong>:
+              The custom editor dynamically generates the UI based on available attributes. 
+              For each attribute, it fetches the tooltip from the enum's metadata using reflection, 
+              providing useful in-editor documentation. If the tooltip is missing, a warning is shown instead.
+          </li>
+          <li>
+              <strong>Adding and Removing Attributes</strong>:
+              The editor shows a list of unused attribute types, letting you add new ones via a dropdown. 
+              When you remove an attribute, it updates the list immediately, ensuring each unit only has 
+              the attributes it needs.
+          </li>
+          <li>
+              <strong>Error Handling and Type Safety</strong>:
+              The editor includes safeguards to handle missing mappings or wrong types. 
+              If something goes awry (e.g., an attribute is now mapped to a different type), 
+              the editor logs clear warnings and displays error messages directly in the Inspector.
+          </li>
+      </ul>
+  </div>
+
+
+  <h3>You cannot have duplicate elements</h3>
+  <img src="UnitDataInspectorAddData.png" alt="Unit data in Warcraft III" class="image">
+
+  <h3>An error is thrown when there is a type mismatch</h3>
+  <img src="UnitDataInspectorError.png" alt="Unit data in Warcraft III" class="image">
+
+  <div class="left-text-box">
+      <h2>Conclusion</h2>
+      <p>
+          While my solution might seem unconventional, I think it fits its purpose really nicely. 
+          My game's core philosophy is that every unit has a unique, personal feel, 
+          so no two units are exactly alike. 
+          This approach allowed me to:
+      </p>
+      <ul>
+          <li>
+              <strong>Save Space</strong>: Only the used attributes are populated.
+          </li>
+          <li>
+              <strong>Enforce Consistency</strong>: With a centralized mapping, I can ensure that shared functionality 
+              (like melee or ranged attacks) is implemented consistently across units.
+          </li>
+          <li>
+              <strong>Improve Debugging</strong>: With custom serialization and editor, any mismatch or error in data types 
+              is caught early, with clear messages for troubleshooting.
+          </li>
+      </ul>
+      <p>
+          While it might not scale for every project, especially those prioritizing performance and strict adherence 
+          to OOP, it provided exactly the freedom and flexibility I needed for my game!
+      </p>
+      <p>
+          Hope you enjoyed this article! If you did, check out my other 
+          <a href="https://lorenzomorini.dev/blog.html" target="_blank">blog posts</a>
+      </p>
+  </div>
+</body>
+</html>

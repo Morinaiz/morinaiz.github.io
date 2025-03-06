@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Lorenzo Morini, Italian video game developer - Weather Effects for Upwork project">
     <link rel="icon" href="../../data/favicon.png" type="image/png">
-    <link href="https://fonts.cdnfonts.com/css/cascadia-code" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700" rel="stylesheet">
     <link rel="stylesheet" href="../../style.css">
     <title>Weather Effects</title>
 </head>
@@ -21,41 +21,39 @@
         </section>
     </header>
     <div class="left-text-box">
-        <h1>Project Overview</h1>
+        <h2>Project Overview</h2>
         <p>
-            Crafting immersive environments for a 2D cartoon-style game, I have developed three distinct
+            While working on a 2D cartoon-style game, I developed three distinct
             atmospheric effects that simulate dynamic weather patterns and add a touch of realism to gameplay.
-            These effects include a multifaceted rain-thunderstorm scenario, a dense snow-blizzard condition, and a pervasive fog ambience.
+            These effects include a multifaceted rain-thunderstorm scenario, a dense snow-blizzard condition, and a fog ambience.<br>
+            A control system for the effects was also done, which interpolates smoothly between different atmospheric conditions.
         </p>
     </div>
     <img src="cover.webp" alt="Lightning" class="image">
     <div class="left-text-box">
         <h2>Dynamic Rain and Thunderstorm</h2>
         <p>For the rain effect, I created a system where the length of each rain particle varies with its falling speed,
-            achieving a realistic look and feel for different intensities of a downpour.
-            The thunderstorm is brought to life with custom-made procedural lightnings, striking dramatically within the scene.
-            A custom shader and material work in unison with a global volume for color tuning,
+            achieving a nice look and feel for different intensities of a downpour.
+            The thunderstorm is brought to life with custom-made procedural lightnings, made with Unity's particle system using a ribbon.
+            A custom shader and material work together with a global volume for color tuning,
             ensuring the storm's visual tone is in perfect sync with the game's art style.
-            To complete the effect, a full-screen flash mirrors the dazzling effect of a real lightning strike, adding to the overall storm experience.
+            To complete the effect, a full-screen flash mirrors the dazzling effect of a real lightning strike.
         </p>
     </div>
     <img src="1.webp" alt="Thunderstorm" class="image">
     <div class="left-text-box">
         <h2>Snow Blizzard with Mist</h2>
-        <p>The snow effect mirrors the complexity of its rainy counterpart but is uniquely tailored to represent a blizzard.
-            It eschews lightning and instead incorporates a custom mist effect that resembles fog, creating the illusion of
-            a snowy whiteout. The blending of snow particles and foggy mist conveys the blustery conditions of a blizzard,
-            all while maintaining the game's cartoon aesthetics.
-
+        <p>The snow effect is similar to its rainy counterpart.
+            It incorporates a custom mist effect that resembles fog, creating the illusion of a snowy whiteout, with a particle effect for the snowflakes.
+            The blending of snow particles and foggy mist conveys the blustery conditions of a blizzard,
+            while maintaining the game's cartoon aesthetics.
         </p>
     </div>
     <img src="2.webp" alt="Blizzard" class="image">
     <div class="left-text-box">
         <h2>Fog</h2>
-        <p>A tightly optimized full-screen shader achieves the fog effect, overlaying the game with a soft, floating mist.
-            The fog's density and movement are carefully controlled to mimic the
-            ebb and flow of real fog, adding a layer of depth to the game's atmosphere.
-
+        <p>A tightly optimized full-screen shader achieves the fog effect, overlaying the game with a soft mist.
+            The fog's density and movement are controlled to mimic the flow of real fog, adding a layer of depth to the game's atmosphere.
         </p>
     </div>
     <img src="3.webp" alt="Fog" class="image">
@@ -74,5 +72,4 @@
     </div>
     </div>
 </body>
-
 </html>

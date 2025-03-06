@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="A deep dive into procedural level generation in Unity using Voronoi diagrams.">
+    <meta name="description" content="A deep dive into procedural level generation in Unity using Voronoi diagrams">
     <link rel="icon" href="../../data/favicon.png" type="image/png">
     <meta property="og:image" content="./cover.webp">
     <title>Voronoi 3D Procedural Level Generation</title>
-    <link href="https://fonts.cdnfonts.com/css/cascadia-code" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700" rel="stylesheet">
     <link href="https://fonts.cdnfonts.com/css/cascadia-mono" rel="stylesheet">
     <link rel="stylesheet" href="../../style.css">
     <link rel="stylesheet" href="style.css">
@@ -27,15 +27,16 @@
     </header>
 
     <div class="left-text-box">
-        <h1>Introduction</h1>
-        <p>While working on my RTT videogame, I encountered the very common problem of how to procedurally generate levels.
+        <h2>Introduction</h2>
+        <p>While working on my Real Time Strategy Roguelike videogame with cats, I encountered the very common problem of how to procedurally generate levels.
             After going back and forth between Perlin and Voronoi for about a week, I landed up on an algorithm that makes it possible to
             generate complicated 3D levels, with a variety of structures in it, always completely walkable.</p>
-        <p>The generation process starts with the creation of a height map. I begin by creating a grid using Voronoi diagrams.
-            The number of Voronoi points, minimum distance between them, and the "relaxation" (which determines how evenly spaced they are)
+        <p>The generation process starts with the creation of a <strong>Height map</strong>.<br>
+            I begin by creating a grid using <strong>Voronoi</strong> diagrams.
+            The number of Voronoi points, minimum distance between them, and the "<strong>relaxation</strong>" (which determines how evenly spaced they are)
             can all be customized.</p>
-        <p>Next, I use an algorithm to determine which Voronoi cells touch each other and create a graph connecting these cells.
-            I run a depth-first search (DFS) on this graph to create a tree—a path that connects all the cells randomly.</p>
+        <p>Next, I use an algorithm to determine which Voronoi cells touch each other and create a <strong>Graph</strong> connecting these cells.
+            I run a Depth-First Search (DFS) on this graph to create a <strong>Tree</strong> that connects all the cells randomly.</p>
         <p>Then, I assign heights. Starting from one cell, I traverse the graph, giving each adjacent cell a height difference of -1, 0, or 1,
             ensuring a smooth elevation change of 1 unit at most between connected cells. Once the heights are assigned to the cells,
             I set the height for every individual square within each cell to match the given height.</p>
@@ -854,6 +855,7 @@
     </div>
 
     <div class="left-text-box">
+        <h2>Relaxation</h2>
         <p>The final step of height map generation is another relaxation algorithm, which smooths the terrain further,
             but this time it operates on the individual squares, not the Voronoi cells.
             As you can see, the difference of values between adjacent cells has now been reduced.
@@ -2276,9 +2278,9 @@
     <div class="left-text-box">
         <h2>Removing unnecessary Ramps</h2>
         <p>After all the ramps have been added, 2 algorithms are used to remove the extra ramps.</p>
-        <p>The first one used a BFS in order to find out how many points of connection there are between different patches of terrain.
-        It then removes a percentage of them, while still making sure that the map is still walkable</p>
-        <p>The second one, instead, examines the whole grid, and removes any ramp that is adjacent to another ramp.
+        <p>The first one uses a Breadth-First Search in order to find out how many points of connection there are between different patches of terrain.
+        It then removes a <strong>percentage</strong> of them, while still making sure that the map is still walkable</p>
+        <p>The second one, instead, examines the whole grid, and removes any ramp that is <strong>adjacent</strong> to another ramp.
             This way, the terrain is more difficult to traverse, and the map looks nicer.</p>
     </div>
 
@@ -3174,7 +3176,7 @@
     <div class="left-text-box">
         <h2>Assigning Prefabs</h2>
         <p>The final step is deciding which prefabs to use for each tile. This part is fairly straightforward: for each tile,
-            I check its surrounding tiles to determine its type (terrain, ramp) and direction. Essentially, this is a large switch statement
+            I check its surrounding tiles to determine its type (terrain, ramp) and direction. Essentially, this is a large <strong>switch statement</strong>
             that ensures the correct prefab and orientation is applied to each tile based on its neighbors.</p>
     </div>
 
@@ -3479,7 +3481,8 @@
             enables for the creation of really different maps, that are always walkable. So I can simply adjust the parameters to achieve
             whatever kind of map I want.</p>
             <p>
-                And that's all for today, I hope you enjoyed the explanation. If you have any question, you can find me on X (former Twitter).
+                And that's all for today, I hope you enjoyed the explanation. If you want to see more, check out my other 
+                <a href="https://lorenzomorini.dev/blog/3/post.html" target="_blank">blog posts</a>!.
             </p>
         </div>
 </body>

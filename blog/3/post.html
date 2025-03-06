@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Improving the look of my Fog of War.">
+    <meta name="description" content="Improving the look of my Fog of War">
     <link rel="icon" href="../../data/favicon.png" type="image/png">
     <meta property="og:image" content="./cover.webp">
     <title>Procedural Mesh Generation for Fog of War</title>
-    <link href="https://fonts.cdnfonts.com/css/cascadia-code" rel="stylesheet">
+    <link href="https://fonts.cdnfonts.com/css/cascadia-mono" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700" rel="stylesheet">
     <link rel="stylesheet" href="../../style.css">
 </head>
 <body>
@@ -24,7 +25,7 @@
     </header>
 
     <div class="left-text-box">
-        <h1>Introduction</h1>
+        <h2>Introduction</h2>
         <p>This is my second blog post about my 3D fog of war implementation. While not strictly necessary, reading the previous blog post will help you understand the context: <br>
             <a href="https://lorenzomorini.dev/blog/2/post.html" target="_blank">Blog Post</a></p>
             
@@ -40,10 +41,10 @@
             Everything worked: it supported multiple units with various lines of sight, it was truly 3D, and it was optimized.
             All the boxes were checked!</p>
         <p>However, every time I asked people to try it, I couldn't help but notice how dark it was.<br>
-            It's common for R.T.S. games to feature a darker fog of war, and sometimes a dust effect is applied to increase brightness.<br>
+            It's common for RTS games to feature a darker fog of war, and sometimes a dust effect is applied to increase brightness.<br>
             But that type of fog just didn't fit the tone of my game. I needed something more cartoonish, so I got back to the drawing board.</p>
         <p>
-            While looking for inspiration, I remembered playing a very cute R.T.S. for mobile called "The Battle of Polytopia".<br>
+            While looking for inspiration, I remembered playing a very cute Turn based Strategy game for mobile called <strong>The Battle of Polytopia</strong>.<br>
             Being tile-based, it featured a fog of war system where each unexplored tile had a "cloud" overlay that hid it completely.<br>
             The effect was quite simple, just a sprite for the cell and one for the disappearance effect, but it looked very nice.<br>
             So I thought, why not do something similar?
@@ -64,19 +65,19 @@
     </div>
 
     <div class="left-text-box">
-        <h2>How a Mesh is made</h2>
+        <h2>How Mesh Is Made</h2>
         <p>
             I had never really used Unity's tools to generate meshes before, so this was quite the learning experience.<br>
             I won't bore you with all the details of how I got there, as it involved a lot of trial and error, but in the end,
             I managed to write a seven-step algorithm that can suit any shape of any type of map:
             <ul>
-                <li>Generate the data for each face</li>
-                <li>Track the connectivity for each vertex</li>
-                <li>Merge the duplicated vertices</li>
-                <li>Assign offset to closest inner position to Vertex Colors</li>
-                <li>Subdivide the triangles of the mesh</li>
-                <li>Smooth the mesh</li>
-                <li>Split the mesh into submeshes</li>
+                <li><strong>Generate</strong> the data for each face</li>
+                <li><strong>Track</strong> the connectivity for each vertex</li>
+                <li><strong>Merge</strong> the duplicated vertices</li>
+                <li><strong>Assign</strong> offset to closest inner position to Vertex Colors</li>
+                <li><strong>Subdivide</strong> the triangles of the mesh</li>
+                <li><strong>Smooth</strong> the mesh</li>
+                <li><strong>Split</strong> the mesh into submeshes</li>
             </ul>
             After all of these passages, a shader will be applied, to modify the vertex position for the vertices, in order to create a smooth effect.<br>
             I will explain all the passages, why they are necessary, and what I will do with the mesh once it's generated,
@@ -104,13 +105,13 @@
         <h2>Tracking connectivity</h2>
         <p>
             Each created vertex is checked against nearby cells, to determine which parts of the grid it's tied to.<br>
-            The system uses a small breadth-first search (B.F.S.) on the tiles in a 2x2x2 area around each vertex, from the starting cell we saved earlier, <br>
-            to capture a unique "fingerprint" of grid cells for each vertex.<br>
+            The system uses a small <strong>Breadth-First Search</strong> (BFS) on the tiles in a 2x2x2 area around each vertex,
+            from the starting cell we saved earlier, to capture a unique "fingerprint" of grid cells for each vertex.<br>
             This data later prevents vertices at the same point in space from being accidentally merged, in case they belong to different parts of the grid.
         </p>
     </div>
 
-    <h3>The red point indicates 2 vertices that won't be merged</h3>
+    <h3>The red point indicates that the vertices won't be merged</h3>
     <img src="ConnectivityMap.png" alt="Vertices per each face" class="image">
 
     <div class="left-text-box">
@@ -126,7 +127,8 @@
         <h2>Assigning Vertex Colors as Inner-Position</h2>
         <p>
             Instead of using typical colors, these "colors" store a small offset vector, which represents the difference between the vertex and inner position it points to.<br>
-            The inner position is calculated by taking the average of the modes of the centers of each cell from the previous B.F.S., separately for each axis.<br>
+            The inner position is calculated by taking the <strong>average of the modes</strong> of the centers of each cell from the previous BFS,
+            <strong>separately for each axis.</strong><br>
             Red represents X, Green Y, and Blue is Z.<br>
             This extra information will become crucial for the shaders, as it indicates where the mesh retracts to, when the tile is explored.
         </p>

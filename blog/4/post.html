@@ -212,8 +212,8 @@
       <p>
           Below is the deserialization code:
       </p>
-<pre><code class="language-csharp">private List&lt;UnitAttribute&gt; DeserializeList(List&lt;string&gt; serializedTypeStrings, 
-    IList&lt;object&gt; serializedValues)
+<pre><code class="language-csharp">private List&lt;UnitAttribute&gt; DeserializeList(
+    List&lt;string&gt; serializedTypeStrings, IList&lt;object&gt; serializedValues)
 {
     List&lt;UnitAttribute&gt; unserializedAttributes = new();
     int dataIndex = 0;

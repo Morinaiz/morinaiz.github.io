@@ -192,7 +192,8 @@
                     floatStringTypes.Add(attribute.dataType.ToString());
                     break;
                 default:
-                    Debug.LogError("Data type not implemented, can't serialize");
+                    Debug.LogError("Data type not implemented, " +
+                                   "cannot serialize");
                     break;
             }
         }
@@ -224,9 +225,11 @@
 
     for (int i = 0; i < serializedTypeStrings.Count; i++)
     {
-        if (!Enum.TryParse(serializedTypeStrings[i], out DataType serializedType))
+        if (!Enum.TryParse(serializedTypeStrings[i],
+            out DataType serializedType))
         {
-            Debug.LogWarning($"Data {serializedTypeStrings[i]} couldn't be parsed. " +
+            Debug.LogWarning($"Data {serializedTypeStrings[i]} " + 
+                              "couldn't be parsed. " +
                               "An enum value has changed. " +
                               "This might or might not be intentional. " +
                               "No data will be added. " +

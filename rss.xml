@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0">
+  <channel>
+    <title>Lorenzo Morini's Blog</title>
+    <link>https://lorenzomorini.dev/</link>
+    <description>My blog, I post about Game Dev, Procedural Generation, Shaders and more</description>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 21 Mar 2025 22:54:18 GMT</lastBuildDate>
+    
+<item>
+  <title>Voronoi 3D Procedural Level Generation</title>
+  <link>https://lorenzomorini.dev//blog/1/post.html</link>
+  <guid>https://lorenzomorini.dev//blog/1/post.html</guid>
+  <pubDate>Wed, 09 Oct 2024 00:00:00 GMT</pubDate>
+  <description>A deep dive into procedural level generation in Unity using Voronoi diagrams</description>
+</item>
+
+<item>
+  <title>3D Fog of War in Unity</title>
+  <link>https://lorenzomorini.dev//blog/2/post.html</link>
+  <guid>https://lorenzomorini.dev//blog/2/post.html</guid>
+  <pubDate>Thu, 13 Feb 2025 00:00:00 GMT</pubDate>
+  <description>Creating a 3D Fog of War implementation in Unity</description>
+</item>
+
+<item>
+  <title>Procedural Mesh Generation for Fog of War</title>
+  <link>https://lorenzomorini.dev//blog/3/post.html</link>
+  <guid>https://lorenzomorini.dev//blog/3/post.html</guid>
+  <pubDate>Tue, 25 Feb 2025 00:00:00 GMT</pubDate>
+  <description>Improving the look of my Fog of War</description>
+</item>
+
+<item>
+  <title>Implementation of Unit Data in a Cat-Themed RTS</title>
+  <link>https://lorenzomorini.dev//blog/4/post.html</link>
+  <guid>https://lorenzomorini.dev//blog/4/post.html</guid>
+  <pubDate>Thu, 06 Mar 2025 00:00:00 GMT</pubDate>
+  <description>Efficient data management for the units in my RTS</description>
+</item>
+
+  </channel>
+</rss>

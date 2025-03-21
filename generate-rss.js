@@ -1,0 +1,54 @@
+import { readdirSync, statSync, existsSync, readFileSync, writeFileSync } from "fs";
+import { join } from "path";
+import { JSDOM } from "jsdom";
+
+const blogRoot = join(__dirname, "../blog");
+const outputPath = join(__dirname, "../rss.xml");
+const siteURL = "https://lorenzomorini.dev/";
+
+const folders = readdirSync(blogRoot).filter(name =>
+  statSync(join(blogRoot, name)).isDirectory()
+);
+
+let rssItems = "";
+
+folders.forEach(folder => {
+  const postPath = join(blogRoot, folder, "post.html");
+  if (!existsSync(postPath)) return;
+
+  const html = readFileSync(postPath, "utf8");
+  const dom = new JSDOM(html);
+  const doc = dom.window.document;
+
+  const title = doc.querySelector("title")?.textContent.trim();
+  const description = doc.querySelector('meta[name="description"]')?.getAttribute("content") || "";
+  const pubDate = doc.querySelector(".post-date")?.textContent.trim();
+  const link = `${siteURL}/blog/${folder}/post.html`;
+
+  if (!title || !pubDate) return;
+
+  rssItems += `
+<item>
+  <title>${title}</title>
+  <link>${link}</link>
+  <guid>${link}</guid>
+  <pubDate>${new Date(pubDate).toUTCString()}</pubDate>
+  <description>${description}</description>
+</item>
+`;
+});
+
+const rss = `<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0">
+  <channel>
+    <title>Lorenzo Morini's Blog</title>
+    <link>${siteURL}</link>
+    <description>My blog, I post about Game Dev, Procedural Generation, Shaders and more</description>
+    <language>en-us</language>
+    <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
+    ${rssItems}
+  </channel>
+</rss>`;
+
+writeFileSync(outputPath, rss);
+console.log("✅ RSS feed generated at /rss.xml");

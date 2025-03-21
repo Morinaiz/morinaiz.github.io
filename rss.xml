@@ -5,7 +5,12 @@
     <link>https://lorenzomorini.dev</link>
     <description>My blog, I post about Game Dev, Procedural Generation, Shaders and more</description>
     <language>en-us</language>
-    <lastBuildDate>Fri, 21 Mar 2025 23:40:33 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 21 Mar 2025 23:48:25 GMT</lastBuildDate>
+    <image>
+      <url>https://lorenzomorini.dev/data/favicon.png</url>
+      <title>Lorenzo Morini's Blog favicon</title>
+      <link>https://lorenzomorini.dev</link>
+    </image>
     
 <item>
   <title>Voronoi 3D Procedural Level Generation</title>

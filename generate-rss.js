@@ -46,6 +46,11 @@ const rss = `<?xml version="1.0" encoding="UTF-8" ?>
     <description>My blog, I post about Game Dev, Procedural Generation, Shaders and more</description>
     <language>en-us</language>
     <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
+    <image>
+      <url>${siteURL}/data/favicon.png</url>
+      <title>Lorenzo Morini's Blog favicon</title>
+      <link>${siteURL}</link>
+    </image>
     ${rssItems}
   </channel>
 </rss>`;

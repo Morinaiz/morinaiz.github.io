@@ -50,5 +50,5 @@ const rss = `<?xml version="1.0" encoding="UTF-8" ?>
   </channel>
 </rss>`;
 
-writeFileSync(outputPath, rss);
+fs.writeFileSync(outputPath, rss);
 console.log("✅ RSS feed generated at /rss.xml");

@@ -1,5 +1,8 @@
 name: Generate RSS Feed
 
+permissions:
+  contents: write
+
 on:
   push:
     branches: [ main ]
@@ -11,6 +14,8 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
+        with:
+          persist-credentials: true
 
       - name: Set Up Node
         uses: actions/setup-node@v3

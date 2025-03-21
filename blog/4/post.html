@@ -273,8 +273,73 @@
     return unserializedAttributes;
 }
 </code></pre>
-        
-  </div>
+</div>
+
+
+<div class="left-text-box">
+  <h2>Unit implementation</h2>
+  <p>That's how the data is handled. However, I needed a custom implementation for each unit,
+      and I achieved this by assigning a private variable to each attribute. I override a dictionary which maps
+      the attributes to the variables, and I cycle through it on the unit's initialization.<br>
+      If an attribute has not been mapped, an error is logged.<br>
+      If there is an extra mapping, an error is logged as well.<br>
+      If the casting fails, an error will be thrown automatically.</p>
+      Here's the implementation in the <strong>Unit</strong> superclass:
+  
+<pre><code class="language-csharp">protected Dictionary&lt;UnitData.DataType, Action&lt;object&gt;&gt; DataMappings;
+      
+protected abstract void SetDataMappings();
+
+protected void InitializeUnitData()
+{
+    SetDataMappings();
+
+    HashSet<UnitData.DataType> usedMappings = new();
+
+    foreach (UnitData.UnitAttribute attribute in unitData.data)
+    {
+        if (!DataMappings.TryGetValue(attribute.dataType, out Action&lt;object&gt; setter))
+        {
+            Debug.LogError($"{attribute.dataType} does not have a mapping, " +
+                            "please add one in DataMappings");
+            continue;
+        }
+
+        setter(attribute.value);
+        usedMappings.Add(attribute.dataType);
+    }
+
+    foreach (var mapping in DataMappings)
+        if (!usedMappings.Contains(mapping.Key))
+        {
+            Debug.LogError($"{GetType().Name} has an unused mapping for " +
+                            $"{mapping.Key}. Please remove this mapping " +
+                            "or provide the corresponding Unit Data.");
+        }
+}</code></pre>
+      
+      And this is an example of how the data is mapped in the <strong>Archer</strong> unit subclass:
+          <pre><code class="language-csharp">protected override void SetDataMappings()
+{
+    DataMappings = new Dictionary<DataType, Action<object>>
+    {
+        { DataType.MaxHealth, value => maxLife = (int)value },
+        { DataType.LineOfSight, value => lineOfSight = (int)value },
+        { DataType.RangedAttackDamage, value => RangedDamage = (int)value },
+        { DataType.RangedAttackCooldown, value =>
+            ((ArcherAIComponent)AIComponent).attackCooldown = (float)value },
+        { DataType.RangedAttackKnockback, value => Knockback = (float)value },
+        { DataType.RangedAttackAccuracy, value => RangedAttackAccuracy = (int)value },
+        { DataType.RangedAttackSpread, value => RangedAttackSpread = (int)value },
+        ...
+    };
+}</code></pre>
+      <p>This approach allows me to avoid errors, as it accounts for every possible combination, which makes debugging way easier.
+      </p>
+              
+
+</div>
+
 
   <div class="left-text-box">
       <h2>Custom Editor for Ease of Use</h2>
@@ -305,13 +370,12 @@
       </ul>
   </div>
 
-
   <h3>You cannot have duplicate elements</h3>
   <img src="UnitDataInspectorAddData.png" alt="Unit data in Warcraft III" class="image">
-
+  
   <h3>An error is thrown when there is a type mismatch</h3>
   <img src="UnitDataInspectorError.png" alt="Unit data in Warcraft III" class="image">
-
+  
   <div class="left-text-box">
       <h2>Conclusion</h2>
       <p>

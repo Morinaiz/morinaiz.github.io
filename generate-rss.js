@@ -2,8 +2,8 @@ const fs = require("fs");
 const path = require("path");
 const { JSDOM } = require("jsdom");
 
-const blogRoot = path.join(__dirname, "../blog");
-const outputPath = path.join(__dirname, "../rss.xml");
+const blogRoot = path.join(__dirname, "blog");
+const outputPath = path.join(__dirname, "rss.xml");
 const siteURL = "https://lorenzomorini.dev/"; // ← replace with your GitHub Pages URL
 
 const folders = fs.readdirSync(blogRoot).filter(name =>

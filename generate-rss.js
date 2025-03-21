@@ -1,22 +1,22 @@
-import { readdirSync, statSync, existsSync, readFileSync, writeFileSync } from "fs";
-import { join } from "path";
-import { JSDOM } from "jsdom";
+const fs = require("fs");
+const path = require("path");
+const { JSDOM } = require("jsdom");
 
-const blogRoot = join(__dirname, "../blog");
-const outputPath = join(__dirname, "../rss.xml");
-const siteURL = "https://lorenzomorini.dev/";
+const blogRoot = path.join(__dirname, "../blog");
+const outputPath = path.join(__dirname, "../rss.xml");
+const siteURL = "https://lorenzomorini.dev/"; // ← replace with your GitHub Pages URL
 
-const folders = readdirSync(blogRoot).filter(name =>
-  statSync(join(blogRoot, name)).isDirectory()
+const folders = fs.readdirSync(blogRoot).filter(name =>
+  fs.statSync(path.join(blogRoot, name)).isDirectory()
 );
 
 let rssItems = "";
 
 folders.forEach(folder => {
-  const postPath = join(blogRoot, folder, "post.html");
-  if (!existsSync(postPath)) return;
+  const postPath = path.join(blogRoot, folder, "post.html");
+  if (!fs.existsSync(postPath)) return;
 
-  const html = readFileSync(postPath, "utf8");
+  const html = fs.readFileSync(postPath, "utf8");
   const dom = new JSDOM(html);
   const doc = dom.window.document;
 
